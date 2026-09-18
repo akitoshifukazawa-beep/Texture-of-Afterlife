@@ -411,3 +411,55 @@
     </script>
 </body>
 </html>
+<script>
+    // 【追加機能】編者Fの偏執的リアルタイム観測ログ & 介入システム
+    (function() {
+        // 1. 画面左下にミニマルなログ表示エリアを動的生成
+        const terminal = document.createElement('div');
+        terminal.style.cssText = `
+            position: fixed;
+            bottom: 32px;
+            left: 40px;
+            font-family: ui-monospace, SFMono-Regular, Monaco, monospace;
+            font-size: 0.65rem;
+            color: #71717a;
+            z-index: 20;
+            pointer-events: none;
+            letter-spacing: 0.1em;
+            line-height: 1.6;
+            max-width: 320px;
+        `;
+        terminal.innerHTML = '[F_OBSERVATION: ACTIVE] <br><span id="f-log-text" style="color: #ef4444; opacity: 0.7; transition: opacity 0.5s ease;">アーカイブの構造を解析中...</span>';
+        document.body.appendChild(terminal);
+
+        // 2. 編者Fの妄想的・偏執的なメッセージのリスト
+        const fMessages = [
+            "彼の残したシラバスの行間に、奇妙な法則性を見出した。",
+            "大学当局は何かを隠している。あの日の事故は、本当に偶然か？",
+            "私の註釈こそが、このアーカイブの真のコンテクストだ。",
+            "文字が消えていく……。彼が私に何かを伝えようとしているのか？",
+            "違う、そうじゃない。彼は絶望していたのではなく、何かを確信していたんだ。",
+            "またアクセスがあった。……君か？ 私の仮説を読んでいるのは。",
+            "日付のズレに気づいたか？ 時間の流出が始まっている。",
+            "一条、君はいいったい最期に何を見たんだ……？"
+        ];
+
+        // 3. 一定時間ごとにメッセージを静かに書き換える
+        let messageIndex = 0;
+        const logTextSpan = document.getElementById('f-log-text');
+        
+        setInterval(() => {
+            messageIndex = (messageIndex + 1) % fMessages.length;
+            logTextSpan.style.opacity = '0';
+            setTimeout(() => {
+                logTextSpan.textContent = fMessages[messageIndex];
+                logTextSpan.style.opacity = '0.7';
+            }, 500);
+        }, 8000);
+
+        // 4. すべての段落に編者Fの視線（ホバー時の不穏なカーソル・ツールチップ）を付与
+        document.querySelectorAll('p.decay-target').forEach(p => {
+            p.title = "【編者Fの注釈：この一節の解釈には細心の注意を要する】";
+        });
+    })();
+</script>
