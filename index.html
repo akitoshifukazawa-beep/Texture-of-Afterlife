@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>このWebサイトは、まだ存在しない。</title>
+    <style>
+        :root {
+            --bg-color: #0b0b0c;
+            --text-color: #d1d1d6;
+            --accent-color: #ff3b30;
+            --dim-color: #55555e;
+            --font-serif: "Shippori Mincho", "Yu Mincho", "Georgia", serif;
+            --font-mono: "SF Mono", "Fira Code", monospace;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-serif);
+            line-height: 2.2;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* レイアウト（モダン・ミニマル） */
+        .container {
+            width: 100%;
+            max-width: 640px;
+            padding: 100px 24px 160px 24px;
+        }
+
+        header {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--dim-color);
+            letter-spacing: 0.15em;
+            margin-bottom: 80px;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #1c1c1e;
+            padding-bottom: 16px;
+        }
+
+        h1.title {
+            font-size: 1.6rem;
+            font-weight: 400;
+            letter-spacing: 0.08em;
+            margin-bottom: 60px;
+            color: #ffffff;
+            line-height: 1.5;
+        }
+
+        .novel-text p {
+            margin-bottom: 2.5rem;
+            font-size: 1.05rem;
+            text-align: justify;
+            word-break: break-all;
+        }
+
+        /* ギミック：注釈・分岐トリガー */
+        .interactive-word {
+            border-bottom: 1px dashed var(--accent-color);
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 0 4px;
+        }
+
+        .interactive-word:hover {
+            background-color: rgba(255, 59, 48, 0.15);
+            color: var(--accent-color);
+        }
+
+        /* 下部から出現する「注釈・裏の意識」レイヤー */
+        .meta-drawer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #141416;
+            border-top: 1px solid #2c2c2e;
+            padding: 32px;
+            transform: translateY(100%);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 -20px 40px rgba(0, 0, 0, 0.8);
+            z-index: 100;
+        }
+
+        .meta-drawer.open {
+            transform: translateY(0);
+        }
+
+        .drawer-inner {
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        .drawer-header {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--accent-color);
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            letter-spacing: 0.1em;
+        }
+
+        .drawer-content {
+            font-size: 0.95rem;
+            color: #a1a1a6;
+            line-height: 1.9;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--dim-color);
+            cursor: pointer;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+        }
+
+        .close-btn:hover { color: #fff; }
+
+        footer {
+            margin-top: 100px;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--dim-color);
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #1c1c1e;
+            padding-top: 24px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <span>Exhibition: #001</span>
+        <span id="read-counter">Interactions: 0</span>
+    </header>
+
+    <h1 class="title">構成員不在の展示室</h1>
+
+    <div class="novel-text">
+        <p>
+            あなたが今見ているこの画面は、Webサイトの形をした<span class="interactive-word" data-note="【注釈 01】正確には、テキストファイルを実行した結果としてあなたのブラウザがレンダリングした一連の誤解。">個室</span>である。
+        </p>
+        <p>
+            建材はレンガでもコンクリートでもなく、HTMLの骨組みとCSSの色彩設計によってつくられている。訪問者はURLという扉をくぐり、カーソルを使って<span class="interactive-word" data-note="【注釈 02】触れるとは、信号を送信すること。この指先とガラス画面の接触によって、サーバー側の記憶がほんの数ミリずつ削られていく。">壁面を撫でる</span>ことしか許されていない。
+        </p>
+        <p>
+            「作者」は既にこのコードを書いたあと、画面の奥へと退去した。残されたのは、あなたがクリックするたびに侵食されていく<span class="interactive-word" data-note="【注釈 03】物語は進むのではなく、あなたによって解体されている。すべてをクリックした時、このページはただの白紙に戻る。">注釈の残骸</span>だけである。
+        </p>
+    </div>
+
+    <footer>
+        <span>Status: ARCHIVED</span>
+        <span id="system-time"></span>
+    </footer>
+</div>
+
+<!-- 注釈オーバーレイ -->
+<div class="meta-drawer" id="drawer">
+    <div class="drawer-inner">
+        <div class="drawer-header">
+            <span id="drawer-tag">NOTE</span>
+            <button class="close-btn" onclick="closeDrawer()">[ CLOSE ]</button>
+        </div>
+        <div class="drawer-content" id="drawer-content"></div>
+    </div>
+</div>
+
+<script>
+    let interactionCount = 0;
+    const drawer = document.getElementById('drawer');
+    const drawerContent = document.getElementById('drawer-content');
+    const counterDisplay = document.getElementById('read-counter');
+
+    // 注釈のインタラクション
+    document.querySelectorAll('.interactive-word').forEach(element => {
+        element.addEventListener('click', (e) => {
+            const noteText = e.target.getAttribute('data-note');
+            drawerContent.textContent = noteText;
+            drawer.classList.add('open');
+
+            interactionCount++;
+            counterDisplay.textContent = `Interactions: ${interactionCount}`;
+            
+            // 閲覧が進むと背景色が微妙に変化する演出
+            const dimDegree = Math.max(5, 11 - interactionCount);
+            document.documentElement.style.setProperty('--bg-color', `#0${dimDegree}0${dimDegree}0c`);
+        });
+    });
+
+    function closeDrawer() {
+        drawer.classList.remove('open');
+    }
+
+    // 現在時刻のシステム表示
+    function updateTime() {
+        const now = new Date();
+        document.getElementById('system-time').textContent = now.toISOString().split('T')[1].slice(0, 8) + ' UTC';
+    }
+    setInterval(updateTime, 1000);
+    updateTime();
+</script>
+
+</body>
+</html>
