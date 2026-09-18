@@ -211,7 +211,7 @@
     <header class="site-header">
         <div class="brand">
             <h1>Texture of Afterlife</h1>
-            <p class="subtitle">故・深沢秋敏 准教授 講義資料・研究メモ保存プロジェクト</p>
+            <p class="subtitle">故・一条和政 准教授 講義資料・研究メモ保存プロジェクト</p>
         </div>
         <div class="metrics">
             <div>ENTROPY: <span id="decay-level">0.00</span>%</div>
@@ -224,7 +224,7 @@
             <h2>解題（凡例に代えて）</h2>
             <p class="decay-target">
                 <span class="hidden-layer">[ERR: 2025-11-04 FILE_CORRUPTED. HE WAS NOT ALONE. F.]</span>
-                本ウェブサイトは、2025年11月に急逝された本学部准教授・深沢秋敏氏（映画学・表象文化論）の遺稿、講義用レジュメ、および未完の論考メモを保存・公開するためのデジタル・アーカイブです。
+                本ウェブサイトは、2025年11月に急逝された本学部准教授・一条和政氏（映画学・表象文化論）の遺稿、講義用レジュメ、および未完の論考メモを保存・公開するためのデジタル・アーカイブです。
             </p>
             <p class="decay-target">
                 <span class="hidden-layer">[NOTE: 彼は本当に事故だったのか？ 私には確信がある。]</span>
@@ -258,7 +258,7 @@
             <h2>遺稿整理者より</h2>
             <p class="decay-target">
                 <span class="hidden-layer">[SYSTEM MESSAGE: 観測者がこのページに留まる限り、データは消失に向かう。]</span>
-                深沢准教授の不意の不在を受け、研究室のパソコンおよび手帳に残されていた未整理のテキスト群を、生前の対話の記憶に基づいて当サイトに順次整理・保存しております。故人が講義資料の随所に残した「一見すると無関係に見える注記や楽曲リスト」は、彼の思考の深層において精密に統合された一つの体系をなしていました。編者（F）の役割は、単なる資料の再掲にとどまらず、彼が最期に到達しようとしていた領域のコンテクストを過不足なく提示することにあります。
+                一条准教授の不意の不在を受け、研究室のパソコンおよび手帳に残されていた未整理のテキスト群を、生前の対話の記憶に基づいて当サイトに順次整理・保存しております。故人が講義資料の随所に残した「一見すると無関係に見える注記や楽曲リスト」は、彼の思考の深層において精密に統合された一つの体系をなしていました。編者（F）の役割は、単なる資料の再掲にとどまらず、彼が最期に到達しようとしていた領域のコンテクストを過不足なく提示することにあります。
             </p>
         </section>
     </main>
@@ -275,11 +275,7 @@
         let dissolvedChars = 0;
 
         targets.forEach(p => {
-            // hidden-layer以外のテキストノードやテキスト部分を抽出して分解
             const hiddenLayer = p.querySelector('.hidden-layer');
-            let textNode = null;
-            
-            // テキスト部分のみを分離してspan化する
             let text = '';
             p.childNodes.forEach(node => {
                 if (node.nodeType === Node.TEXT_NODE) {
@@ -288,7 +284,6 @@
             });
             text = text.trim();
 
-            // pの中身を再構築 (hidden-layerを保持しつつ、テキストを分解)
             p.innerHTML = '';
             if (hiddenLayer) p.appendChild(hiddenLayer);
 
@@ -320,6 +315,30 @@
 
             const decayPercent = ((dissolvedChars / totalChars) * 100).toFixed(2);
             document.getElementById('decay-level').textContent = decayPercent;
+
+            // 100%崩壊時の演出
+            if (dissolvedChars >= totalChars) {
+                setTimeout(() => {
+                    document.body.innerHTML = `
+                        <div style="
+                            height: 100vh;
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: center;
+                            align-items: center;
+                            font-family: ui-monospace, monospace;
+                            color: var(--accent-red);
+                            letter-spacing: 0.2em;
+                            text-align: center;
+                            padding: 20px;
+                            background: var(--bg);
+                        ">
+                            <p style="font-size: 0.8rem; margin-bottom: 12px; color: #52525b;">[ ARCHIVE DESTROYED BY OBSERVER ]</p>
+                            <p style="font-size: 1.1rem;">この記録は完全に風化しました。<br>二度と再現することはできません。</p>
+                        </div>
+                    `;
+                }, 1000);
+            }
         }
 
         // トリガー1: スクロールに応じた風化加速
