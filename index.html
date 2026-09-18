@@ -73,6 +73,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kinetic Archive: Erosion</title>
   <style>
+      /* 隠された裏テキストのレイヤー */
+.decay-target {
+  position: relative;
+}
+
+.hidden-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  color: rgba(239, 68, 68, 0.25); /* ほのかに浮き上がる赤 */
+  font-family: ui-monospace, SFMono-Regular, Monaco, monospace;
+  font-size: 0.85rem;
+  line-height: 2;
+  pointer-events: none;
+  z-index: 0;
+  user-select: none;
+}
+
+.decay-char {
+  position: relative;
+  z-index: 1; /* 表面の文字を上に配置 */
+}
     :root {
       --bg-color: #0d0d0d;
       --text-color: #dcdcdc;
@@ -178,6 +202,12 @@
 
     <main id="content">
       <p class="decay-target">
+          <p class="decay-target">
+  <span class="hidden-layer">
+    [ERR: 2025-11-04 FILE_CORRUPTED. HE WAS NOT ALONE IN THE ROOM. F.]
+  </span>
+  デジタルデータは劣化しないという幻影のもとで、我々は過剰な記録を積み重ねている...
+</p>
         デジタルデータは劣化しないという幻影のもとで、我々は過剰な記録を積み重ねている。しかし、真に芸術的なものは、常に時間の不可逆性と死の気配を孕んでいるのではないか。
       </p>
       <p class="decay-target">
@@ -232,6 +262,30 @@
 
       // 崩壊率の更新
       const decayPercent = ((dissolvedChars / totalChars) * 100).toFixed(2);
+        // 崩壊率100%時の最終処理
+if (dissolvedChars >= totalChars) {
+  document.getElementById('decay-level').textContent = "100.00";
+  
+  setTimeout(() => {
+    document.body.innerHTML = `
+      <div style="
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        font-family: ui-monospace, monospace;
+        color: var(--accent-red);
+        letter-spacing: 0.2em;
+        text-align: center;
+        padding: 20px;
+      ">
+        <p style="font-size: 0.8rem; margin-bottom: 12px; color: #52525b;">[ ARCHIVE DESTROYED BY OBSERVER ]</p>
+        <p style="font-size: 1.1rem;">この記録は完全に風化しました。<br>二度と再現することはできません。</p>
+      </div>
+    `;
+  }, 1000);
+}
       document.getElementById('decay-level').textContent = decayPercent;
     }
 
@@ -563,6 +617,35 @@
       requestAnimationFrame(drawNoise);
     }
     drawNoise();
+      // --- 視線の残り香（カーソル軌跡の熱化） ---
+document.addEventListener('mousemove', (e) => {
+  if (Math.random() > 0.3) return; // 発生頻度を抑える
+
+  const trail = document.createElement('div');
+  trail.style.cssText = `
+    position: fixed;
+    top: ${e.clientY}px;
+    left: ${e.clientX}px;
+    width: 4px;
+    height: 4px;
+    background: rgba(239, 68, 68, 0.4);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 2;
+    filter: blur(2px);
+    transition: transform 2s ease, opacity 2s ease;
+  `;
+  document.body.appendChild(trail);
+
+  requestAnimationFrame(() => {
+    trail.style.transform = `scale(${Math.random() * 8 + 4})`;
+    trail.style.opacity = '0';
+  });
+
+  setTimeout(() => {
+    trail.remove();
+  }, 2000);
+});
   </script>
 </body>
 </html>
