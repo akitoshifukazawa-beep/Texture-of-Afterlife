@@ -66,3 +66,209 @@
 
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kinetic Archive: Erosion</title>
+  <style>
+    :root {
+      --bg-color: #0d0d0d;
+      --text-color: #dcdcdc;
+      --accent-color: #555555;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: "Georgia", "Yu Mincho", "游明朝", serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background-color 2s ease;
+    }
+
+    /* 視覚的ノイズ（風化フィルター） */
+    #canvas-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0.15;
+    }
+
+    .container {
+      max-width: 680px;
+      margin: 120px 20px;
+      line-height: 2.2;
+      letter-spacing: 0.08em;
+      z-index: 1;
+    }
+
+    header {
+      margin-bottom: 80px;
+      border-bottom: 1px solid #222;
+      padding-bottom: 20px;
+    }
+
+    h1 {
+      font-weight: 300;
+      font-size: 1.2rem;
+      color: #777;
+      letter-spacing: 0.2em;
+    }
+
+    .status-bar {
+      font-size: 0.75rem;
+      color: #444;
+      font-family: monospace;
+      margin-top: 10px;
+    }
+
+    p {
+      font-size: 1.05rem;
+      margin-bottom: 3rem;
+      text-align: justify;
+      transition: opacity 1s ease, filter 1s ease;
+    }
+
+    /* 風化エフェクト用クラス */
+    .eroded {
+      color: #333 !important;
+      user-select: none;
+    }
+
+    .decay-char {
+      display: inline-block;
+      transition: transform 3s ease, opacity 3s ease, filter 3s ease;
+    }
+
+    .dissolved {
+      opacity: 0;
+      filter: blur(8px);
+      transform: translateY(10px) rotate(15deg);
+    }
+
+    footer {
+      margin-top: 150px;
+      font-size: 0.8rem;
+      color: #333;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="canvas-overlay"></canvas>
+
+  <div class="container">
+    <header>
+      <h1>ARCHIVE // ENTROPY</h1>
+      <div class="status-bar">
+        DECAY RATE: <span id="decay-level">0.00</span>% | OBSERVER PRESENCE: ACTIVE
+      </div>
+    </header>
+
+    <main id="content">
+      <p class="decay-target">
+        デジタルデータは劣化しないという幻影のもとで、我々は過剰な記録を積み重ねている。しかし、真に芸術的なものは、常に時間の不可逆性と死の気配を孕んでいるのではないか。
+      </p>
+      <p class="decay-target">
+        このページに存在する文字は、あなたが視線を注ぎ、スクロールを繰り返すたびに、少しずつその輪郭を失っていく。あなたが読んだという事実そのものが、このテキストを破壊する。
+      </p>
+      <p class="decay-target">
+        二度と同じ状態の文章に出会うことはできない。崩壊していく意味の隙間から、何を感じ取るかは観察者であるあなたに委ねられている。
+      </p>
+    </main>
+
+    <footer>
+      <p style="text-align: center; color: #222;">[ SYSTEM: REGENERATION DISABLED ]</p>
+    </footer>
+  </div>
+
+  <script>
+    // --- 1. テキストの文字単位分解 ---
+    const targets = document.querySelectorAll('.decay-target');
+    let totalChars = 0;
+    let dissolvedChars = 0;
+
+    targets.forEach(p => {
+      const text = p.textContent.trim();
+      p.textContent = '';
+      
+      for (let char of text) {
+        const span = document.createElement('span');
+        span.textContent = char;
+        span.classList.add('decay-char');
+        p.appendChild(span);
+        totalChars++;
+      }
+    });
+
+    // --- 2. 観察者の挙動（スクロール・時間経過）による風化 ---
+    function erode() {
+      const chars = document.querySelectorAll('.decay-char:not(.dissolved)');
+      if (chars.length === 0) return;
+
+      // ランダムに文字を選択して崩壊させる
+      const countToErode = Math.min(Math.floor(Math.random() * 3) + 1, chars.length);
+      
+      for (let i = 0; i < countToErode; i++) {
+        const randomIndex = Math.floor(Math.random() * chars.length);
+        const targetChar = chars[randomIndex];
+        
+        if (targetChar) {
+          targetChar.classList.add('dissolved');
+          dissolvedChars++;
+        }
+      }
+
+      // 崩壊率の更新
+      const decayPercent = ((dissolvedChars / totalChars) * 100).toFixed(2);
+      document.getElementById('decay-level').textContent = decayPercent;
+    }
+
+    // スクロールイベントに応じて風化を加速
+    window.addEventListener('scroll', () => {
+      erode();
+    });
+
+    // 時間の経過（2秒ごと）でも自然風化
+    setInterval(() => {
+      erode();
+    }, 2000);
+
+    // --- 3. 視覚的ノイズ（キャンバスによるパーティクル生成） ---
+    const canvas = document.getElementById('canvas-overlay');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function drawNoise() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+      
+      for (let i = 0; i < 100; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const size = Math.random() * 2;
+        ctx.fillRect(x, y, size, size);
+      }
+      requestAnimationFrame(drawNoise);
+    }
+    drawNoise();
+  </script>
+</body>
+</html>
