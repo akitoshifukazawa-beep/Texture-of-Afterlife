@@ -2,14 +2,14 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Archive: 自動生成される妄想</title>
+    <title>Archive: テキスト解読エンジン</title>
     <style>
         :root {
             --bg: #f9f9f8;
             --text: #1a1a1a;
             --muted: #777;
             --border: #dcdcdc;
-            --highlight: rgba(0, 0, 0, 0.05);
+            --quote-bg: #f0f0ec;
         }
 
         body {
@@ -26,35 +26,42 @@
 
         .container {
             width: 100%;
-            max-width: 700px;
+            max-width: 750px;
         }
 
-        /* 本文（偽りの表面） */
-        .manuscript {
-            margin-bottom: 4rem;
-            padding-bottom: 2rem;
+        .header-box {
+            margin-bottom: 3rem;
+            padding-bottom: 1.5rem;
             border-bottom: 1px solid var(--text);
         }
 
-        .manuscript p {
-            text-align: justify;
+        .trigger-btn {
+            background: none;
+            border: 1px solid var(--text);
+            padding: 0.8rem 1.5rem;
+            font-family: inherit;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.1em;
         }
 
-        /* 注釈（自動生成される無限のテキスト） */
+        .trigger-btn:hover {
+            background-color: var(--text);
+            color: var(--bg);
+        }
+
         .scholia-container {
             display: flex;
             flex-direction: column;
-            gap: 2rem;
+            gap: 2.5rem;
         }
 
         .scholium {
-            border-left: 1px solid var(--border);
-            padding-left: 2rem;
+            border-left: 2px solid var(--text);
+            padding-left: 1.5rem;
             font-size: 0.95rem;
-            color: var(--text);
-            animation: insertFade 0.5s ease forwards;
-            opacity: 0;
-            transform: translateX(-10px);
+            animation: fadeIn 0.4s ease forwards;
         }
 
         .scholium-header {
@@ -63,125 +70,96 @@
             color: var(--muted);
             margin-bottom: 0.5rem;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
         }
 
-        /* クリックして増殖させるためのリンク */
-        .node {
-            cursor: crosshair;
-            border-bottom: 1px dashed var(--text);
-            transition: background-color 0.2s;
+        .fetched-quote {
+            background-color: var(--quote-bg);
+            padding: 0.8rem 1.2rem;
+            font-size: 0.85rem;
+            color: #444;
+            margin: 0.8rem 0;
+            border-left: 3px solid var(--muted);
         }
 
-        .node:hover {
-            background-color: var(--highlight);
-        }
-        
-        .node.clicked {
-            color: var(--muted);
-            border-bottom: none;
-            cursor: default;
+        .interpretation {
+            margin-top: 0.8rem;
         }
 
-        @keyframes insertFade {
-            to { opacity: 1; transform: translateX(0); }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <!-- 最初のテキスト -->
-        <div class="manuscript">
-            <h2>映像における記憶の改変</h2>
-            <p>
-                我々がスクリーンを通して目撃するものは、決して客観的な現実ではない。カメラという装置は常に特定のフレームを切り取り、それ以外の世界を隠蔽する。そのとき、観客の脳内で起きているのは事実の受容ではなく、<span class="node" onclick="generateScholium(this, '隠蔽された文脈')">隠蔽された文脈</span>の恣意的な補完である。
-            </p>
+        <div class="header-box">
+            <h2>自動テキスト読解装置</h2>
+            <p>ボタンを押すたびに無作為な外部テキストを挿入し、その背景にある記述構造を解読します。</p>
+            <button class="trigger-btn" id="fetch-btn" onclick="fetchAndInterpret()">外部テキストを取得・解読</button>
         </div>
 
-        <!-- 注釈が無限に積み上がるコンテナ -->
         <div class="scholia-container" id="scholia-box"></div>
     </div>
 
     <script>
-        // -------------------------------------------------------------
-        // パラノイア・エンジン (Paranoia Generation Engine)
-        // 編者が仕組んだ「文脈の自動生成アルゴリズム」
-        // -------------------------------------------------------------
+        let count = 1;
 
-        // 語彙の辞書（ランダムに組み合わされるフラグメント）
-        const fragments = {
-            subjects: [
-                "C.K.が執筆したとされる学位論文は、",
-                "我々を監視しているあのシステムの構造は、",
-                "1998年の冬に彼が私の部屋から持ち去ったノートは、",
-                "ゼムブラの雪原に埋められた王の記憶は、",
-                "私がこのウェブサイトに密かに埋め込んだコードは、"
-            ],
-            actions: [
-                "表面上は映画理論を装いながら、",
-                "アカデミズムの正統性を盾にして、",
-                "私の存在そのものを抹消しようとする意図を隠しつつ、",
-                "暗号化されたメタファーとして機能し、",
-                "全くの無意味な記号の羅列として偽装され、"
-            ],
-            targets: [
-                "私の過去の記憶を冷酷に書き換えている。",
-                "彼自身の盗用の罪を告発し続けているのだ。",
-                "読者を終わりのないパラノイアの迷宮へと引きずり込む。",
-                "真の王位継承者が誰であるかを密かに証明している。",
-                "このテキストそのものが一つの罠であることを示している。"
-            ],
-            // 次のクリックを生み出す「感染性のキーワード」
-            triggers: [
-                "鏡の錯覚", "失われた手稿", "監視者の足音", "青白い炎", "零度のエクリチュール", "北方の幻影"
-            ]
-        };
+        // 特定作品に依存しない、汎用的な過剰解釈（解読）テンプレート
+        const interpretTemplates = [
+            (title, snippet) => `一見すると「${title}」に関する無害な記述に見える。しかし、${snippet} という一節において決定的な文脈の切断が行われている。表面上の事実に意識を向けさせ、記録の根幹から目を逸らさせるための過剰な記述に過ぎない。`,
+            (title, snippet) => `拾い上げられた「${title}」というテキストの裏には、${snippet} という形で別の意図が潜んでいる。この記述が提示されたこと自体、元のアレゴリーが改変された証拠である。`,
+            (title, snippet) => `「${title}」という言葉（― ${snippet}）がこのタイミングで抽出されたのは偶然ではない。検索およびアーカイブのアルゴリズム自体が、特定の記録を隠蔽するように操作されている。`,
+            (title, snippet) => `『${title}』をめぐる言説の中で語られる ${snippet} という部分は、先行する記述を意図的に上書きした痕跡である。客観的データという形式を借りた言論の再構築に他ならない。`
+        ];
 
-        // ランダムな要素を配列から取得するヘルパー関数
         function getRandom(arr) {
             return arr[Math.floor(Math.random() * arr.length)];
         }
 
-        // 注釈のカウンター
-        let noteCount = 1;
+        async function fetchAndInterpret() {
+            const btn = document.getElementById('fetch-btn');
+            btn.disabled = true;
+            btn.innerText = "テキスト取得中...";
 
-        // クリック時に呼ばれる生成関数
-        function generateScholium(element, triggerWord) {
-            // 既にクリックされたリンクは無効化
-            if (element.classList.contains('clicked')) return;
-            element.classList.add('clicked');
+            try {
+                // Wikipedia API等からランダムな概要を取得
+                const response = await fetch('https://ja.wikipedia.org/api/rest_v1/page/random/summary');
+                const data = await response.json();
 
-            // ランダムに文章を組み立てる
-            const subject = getRandom(fragments.subjects);
-            const action = getRandom(fragments.actions);
-            const target = getRandom(fragments.targets);
-            
-            // 次なる亀裂（クリッカブルな単語）をランダムに決定
-            const nextTrigger = getRandom(fragments.triggers);
+                const title = data.title;
+                const extract = data.extract ? data.extract.substring(0, 90) + "…" : "（テキストの抽出に失敗）";
 
-            // 文章を結合し、一部に次のリンクを仕込む
-            const generatedText = `${subject}${action}${target} だが、彼らが本当に恐れているのは、私が残した <span class="node" onclick="generateScholium(this, '${nextTrigger}')">${nextTrigger}</span> の存在なのだ。`;
+                const templateFn = getRandom(interpretTemplates);
+                const resultText = templateFn(title, extract);
 
-            // HTML要素の作成
-            const scholiumDiv = document.createElement('div');
-            scholiumDiv.className = 'scholium';
-            
-            scholiumDiv.innerHTML = `
-                <div class="scholium-header">Scholium ${noteCount} [Ref: ${triggerWord}]</div>
-                <div class="scholium-text">${generatedText}</div>
-            `;
+                const scholiumDiv = document.createElement('div');
+                scholiumDiv.className = 'scholium';
+                scholiumDiv.innerHTML = `
+                    <div class="scholium-header">Record #${count} [Source: ${title}]</div>
+                    <div class="fetched-quote">
+                        <strong>引用箇所：</strong>「${extract}」
+                    </div>
+                    <div class="interpretation">
+                        <strong>解読：</strong>${resultText}
+                    </div>
+                `;
 
-            // コンテナの末尾に追加
-            document.getElementById('scholia-box').appendChild(scholiumDiv);
+                document.getElementById('scholia-box').appendChild(scholiumDiv);
+                count++;
 
-            noteCount++;
+                window.scrollTo({
+                    top: document.body.scrollHeight,
+                    behavior: 'smooth'
+                });
 
-            // スクロールを一番下へ滑らかに移動（無限の深みへ落ちていく演出）
-            window.scrollTo({
-                top: document.body.scrollHeight,
-                behavior: 'smooth'
-            });
+            } catch (error) {
+                console.error("Fetch Error:", error);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "外部テキストを取得・解読";
+            }
         }
     </script>
 </body>
