@@ -2,12 +2,15 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>不在のアーカイブ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>執筆・論考アーカイブ | 注釈付</title>
     <style>
         :root {
-            --bg: #ffffff;
-            --text: #111111;
+            --bg: #fcfcfc;
+            --text: #0a0a0a;
+            --muted: #555555;
             --border: #cccccc;
+            --highlight: #e0e0e0;
             --max-width: 680px;
         }
 
@@ -19,101 +22,189 @@
 
         body {
             font-family: "游明朝", YuMincho, "ヒラギノ明朝 ProN W3", "Hiragino Mincho ProN", "Times New Roman", serif;
+            color: var(--text);
             background-color: var(--bg);
-            color: var(--text);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 4rem 2rem;
+            line-height: 2.2;
             letter-spacing: 0.05em;
-            line-height: 2.4;
+            font-size: 15px;
+            padding: 6rem 2rem 10rem;
         }
 
-        .container {
-            width: 100%;
+        header {
             max-width: var(--max-width);
+            margin: 0 auto 5rem;
+            border-bottom: 1px solid var(--text);
+            padding-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
         }
 
-        #input-view {
-            text-align: center;
-            padding: 10rem 0;
-        }
-
-        .seed-input {
-            width: 100%;
-            background: transparent;
-            border: none;
-            border-bottom: 1px solid var(--border);
-            font-family: inherit;
+        .site-title {
             font-size: 1.1rem;
-            color: var(--text);
-            text-align: center;
-            padding: 0.5rem 0;
-            outline: none;
-            transition: border-color 0.4s ease;
+            font-weight: normal;
+            letter-spacing: 0.15em;
         }
 
-        .seed-input:focus {
-            border-bottom-color: var(--text);
+        main {
+            max-width: var(--max-width);
+            margin: 0 auto;
         }
 
-        .seed-input::placeholder {
-            color: transparent;
-        }
-
-        #essay-view {
-            display: none;
-            text-align: justify;
-        }
-
-        .essay-body {
-            font-size: 1rem;
-            color: var(--text);
+        /* 本文ブロック */
+        .canto {
             margin-bottom: 4rem;
         }
 
-        .colophon {
-            border-top: 1px solid var(--border);
-            padding-top: 1.5rem;
-            font-size: 0.75rem;
-            color: #777777;
-            letter-spacing: 0.15em;
+        .canto-title {
+            font-size: 1.25rem;
+            font-weight: normal;
+            margin-bottom: 1.5rem;
+            letter-spacing: 0.1em;
+        }
+
+        p {
+            margin-bottom: 1.5rem;
+            text-align: justify;
+        }
+
+        /* 偏執狂的ネットワークを形成するリンク */
+        .node-link {
+            cursor: pointer;
+            border-bottom: 1px solid var(--text);
+            transition: background-color 0.2s ease;
+        }
+
+        .node-link:hover {
+            background-color: var(--highlight);
+        }
+
+        /* 注釈（Scholium）のスタイル：展開される狂気 */
+        .scholium-container {
+            border-left: 1px solid var(--border);
+            padding-left: 2rem;
+            margin-top: 1.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text);
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .scholium-container.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .scholium-header {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 0.7rem;
+            color: var(--muted);
+            letter-spacing: 0.2em;
             text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        /* 削除や隠蔽を示すスタイル */
+        .redacted {
+            background-color: var(--text);
+            color: var(--text);
+            padding: 0 4px;
+            user-select: none;
         }
     </style>
 </head>
 <body>
 
-    <main class="container">
-        <div id="input-view">
-            <input type="text" id="seedInput" class="seed-input" autofocus autocomplete="off" spellcheck="false">
-        </div>
+    <header>
+        <h1 class="site-title">執筆・論考アーカイブ：再編版</h1>
+    </header>
 
-        <div id="essay-view">
-            <div id="essayContent" class="essay-body"></div>
-            <footer class="colophon">
-                <p>Synthesized by Human Intent & Machine Architecture</p>
-            </footer>
+    <main id="manuscript">
+        <!-- ベースとなるテキスト（ Poemにあたる部分 ） -->
+        <div class="canto">
+            <h2 class="canto-title">不在としての戦争：小津安二郎と沈黙の構造</h2>
+            <p>
+                小津安二郎の後期作品には、画面に直接描かれない「大きな出来事」の影が重たく沈殿している。それは第二次世界大戦という未曾有の崩壊であり、兵士として出征した息子たちの死、あるいは引き揚げといった現実である。しかし小津のカメラは、その戦争の痛烈な傷跡を正面から映し出すことはない。徹底して抑制された美的形式の背後にこそ、語られない記憶が<span class="node-link" onclick="injectScholium(this, 'absence')">不在の形式</span>として刻印されているのだ。家族の崩壊は、歴史の断絶を潜り抜けた日本人が直面せざるを得なかった集団的喪失の<span class="node-link" onclick="injectScholium(this, 'metaphor')">メタファー</span>にほかならない。
+            </p>
         </div>
     </main>
 
     <script>
-        const inputView = document.getElementById('input-view');
-        const essayView = document.getElementById('essay-view');
-        const seedInput = document.getElementById('seedInput');
-        const essayContent = document.getElementById('essayContent');
-
-        seedInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                const seed = seedInput.value.trim();
-                if (seed.length > 0) {
-                    inputView.style.display = 'none';
-                    essayContent.innerHTML = `<p>「${seed}」という断片が孕む構造的裂け目を起点として、映像の静止性とエクリチュールの零度が交差する。不可逆的な時間の流れのなかで、表象は常に一つの不在を指し示し続けている。</p>`;
-                    essayView.style.display = 'block';
-                }
+        // 注釈（Commentary）のデータベース
+        // 学術的な解説を装いながら、編者の狂気、盗用への怒り、幻の故郷の記憶がネットワーク状に連鎖する
+        const scholia = {
+            "absence": {
+                title: "Scholium: 不在の形式",
+                text: "「不在の形式」。この概念的語彙を、C.K.が私の未完の原稿『氷結する時計』から抜き出し、自らの学位論文（1998年）に流用した事実は、いまだアカデミズムにおいて黙殺され続けている。彼は小津について語るふりをしながら、実際には私が彼に打ち明けた<span class=\"node-link\" onclick=\"injectScholium(this, 'room')\">あの部屋での出来事</span>を理論に仮託して剽窃したのだ。彼が不在と呼ぶものは、理論ではなく私自身の現実の喪失である。"
+            },
+            "metaphor": {
+                title: "Scholium: メタファー",
+                text: "ここでいうメタファーとは、修辞学上の問題ではない。ナボコフが『青白い炎』においてゼムブラという幻の王国を創造したように、我々もまた自らの喪失を隠蔽するための暗号を必要とする。C.K.は私を「誇大妄想狂」と呼んだが、<span class=\"node-link\" onclick=\"injectScholium(this, 'notebook')\">奪われた手稿</span>を読めば、どちらが真の創造者であったかは明白である。"
+            },
+            "room": {
+                title: "Scholium: あの部屋での出来事",
+                text: "1997年11月14日、午後3時。北向きの窓、剥がれかけた壁紙、机の上にはバルトの『エクリチュールの零度』が裏返しに置かれていた。C.K.は私のノートを読みながら、「君の思考は極端に偏執的で、しかし美しい」と囁いた。あの<span class=\"node-link\" onclick=\"injectScholium(this, 'zero_degree')\">零度の瞬間</span>に、私のすべての知的財産と、私の故郷にまつわる記憶の所有権が彼に移行し始めたのだ。私は彼を許さない。"
+            },
+            "notebook": {
+                title: "Scholium: 奪われた手稿",
+                text: "手稿のタイトルは『動的文学装置としての悲哀』。そこには、映画の静止画（マルケルの『ラ・ジュテ』）と記憶の改ざんについての完璧な論証が含まれていた。C.K.はそれを「学術的体裁をなしていない」として却下した数週間後、自らの名前で学術誌に発表した。私がこのアーカイブを構築したのは、彼のテキストの隙間に私の注釈を潜り込ませ、<span class=\"node-link\" onclick=\"injectScholium(this, 'truth')\">歴史を書き換える</span>ためである。"
+            },
+            "zero_degree": {
+                title: "Scholium: 零度の瞬間",
+                text: "エクリチュールの零度。すなわち、すべての感情と装飾が凍結された絶対的な無の地点。私はこのウェブサイトを、その零度を体現する装置として設計した。俗悪なUIも、アニメーションも存在しない。あるのは純粋なテキストの連鎖のみである。しかし、このテキストの網の目そのものが、C.K.に対する私の<span class=\"node-link\" onclick=\"injectScholium(this, 'revenge')\">最も知的な復讐</span>であることを、彼はまだ気づいていない。"
+            },
+            "truth": {
+                title: "Scholium: 歴史を書き換える",
+                text: "歴史は常に、手稿を奪った者によって記述される。しかし、ハイパーテキストという構造は、周縁（注釈）が中心（本文）を破壊することを可能にする。このサイトの訪問者は、小津について読んでいると思い込みながら、無意識のうちに私の人生、私の喪失、私のゼムブラについての<span class=\"node-link\" onclick=\"injectScholium(this, 'madness')\">記憶の迷宮</span>へと引きずり込まれるのだ。"
+            },
+            "revenge": {
+                title: "Scholium: 最も知的な復讐",
+                text: "ナイフや銃による復讐など、肉体労働者の陳腐な戯れに過ぎない。私は彼の築き上げた「正統な学術」の土台に、この注釈という名の亀裂を無限に挿入し続ける。彼の論文が引用されるたびに、その不可視の基底には私の狂気と知性が流れているのだ。これ以上の芸術的達成が他にあろうか？"
+            },
+            "madness": {
+                title: "Scholium: 記憶の迷宮",
+                text: "迷宮の中心にいるのは私ではない。私を監視し、私の思想を盗み続ける<span class=\"redacted\">█████</span>だ。私は彼から逃れるために、文字の裏側に身を隠し、こうして永遠に続く注釈を書き続けている。誰も私を見つけることはできない。誰も私を理解することはできない。私は完全に孤立し、それゆえに完全に自由である。"
             }
-        });
+        };
+
+        // クリックされたリンクの直下に、注釈を挿入し展開する関数
+        function injectScholium(element, key) {
+            // 既に注釈が展開されている場合は何もしない（重複展開の防止）
+            if (element.dataset.expanded === "true") return;
+            
+            const data = scholia[key];
+            if (!data) return;
+
+            // 注釈コンテナの作成
+            const scholiumDiv = document.createElement('div');
+            scholiumDiv.className = 'scholium-container';
+            
+            scholiumDiv.innerHTML = `
+                <div class="scholium-header">${data.title}</div>
+                <div class="scholium-text">${data.text}</div>
+            `;
+
+            // 要素の直後に挿入 (同一段落内の場合は親の <p> 要素の後に挿入する)
+            let target = element;
+            while (target && target.tagName !== 'P' && target.tagName !== 'DIV') {
+                target = target.parentNode;
+            }
+            
+            target.parentNode.insertBefore(scholiumDiv, target.nextSibling);
+
+            // アニメーション表示
+            setTimeout(() => {
+                scholiumDiv.classList.add('active');
+            }, 10);
+
+            // 展開済みフラグをセットし、リンクの色を固定
+            element.dataset.expanded = "true";
+            element.style.color = "var(--muted)";
+            element.style.borderBottom = "none";
+            element.style.cursor = "default";
+        }
     </script>
 
 </body>
