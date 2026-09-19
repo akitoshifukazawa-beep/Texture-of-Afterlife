@@ -2,268 +2,187 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Archive: 境界の消失</title>
-    <!-- 
-        Note to self:
-        They think this is about cinema. Let them think that.
-        The real manuscript is hidden within the DOM. 
-        C.K. will never find it here.
-    -->
+    <title>Archive: 自動生成される妄想</title>
     <style>
         :root {
-            --paper: #f4f4f0;
-            --ink: #1a1a1a;
-            --faded-ink: #555;
-            --link-line: #1a1a1a;
-            --grid-line: #e0e0e0;
+            --bg: #f9f9f8;
+            --text: #1a1a1a;
+            --muted: #777;
+            --border: #dcdcdc;
+            --highlight: rgba(0, 0, 0, 0.05);
         }
 
         body {
-            background-color: var(--paper);
-            color: var(--ink);
-            font-family: "游明朝", "YuMincho", serif;
-            margin: 0;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
+            font-family: "游明朝", YuMincho, "ヒラギノ明朝 ProN W3", "Hiragino Mincho ProN", serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 2.2;
             letter-spacing: 0.05em;
-            line-height: 2;
-        }
-
-        /* The Core Text (False Facade) */
-        #poem-pane {
-            width: 45%;
-            padding: 5rem 4rem;
-            border-right: 1px solid var(--grid-line);
-            overflow-y: auto;
-            position: relative;
-        }
-
-        /* The Commentary (The Real Kingdom) */
-        #commentary-pane {
-            width: 55%;
-            padding: 5rem 4rem;
-            overflow-y: auto;
-            background-color: #fdfdfa;
-        }
-
-        h1 {
-            font-size: 1.2rem;
-            font-weight: normal;
-            margin-bottom: 3rem;
-            letter-spacing: 0.2em;
-        }
-
-        .line {
+            margin: 0;
+            padding: 5rem 2rem 10rem;
             display: flex;
-            margin-bottom: 1.5rem;
-            transition: all 0.5s ease;
+            justify-content: center;
         }
 
-        .line-num {
-            width: 30px;
-            color: var(--faded-ink);
+        .container {
+            width: 100%;
+            max-width: 700px;
+        }
+
+        /* 本文（偽りの表面） */
+        .manuscript {
+            margin-bottom: 4rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--text);
+        }
+
+        .manuscript p {
+            text-align: justify;
+        }
+
+        /* 注釈（自動生成される無限のテキスト） */
+        .scholia-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .scholium {
+            border-left: 1px solid var(--border);
+            padding-left: 2rem;
+            font-size: 0.95rem;
+            color: var(--text);
+            animation: insertFade 0.5s ease forwards;
+            opacity: 0;
+            transform: translateX(-10px);
+        }
+
+        .scholium-header {
             font-family: monospace;
-            font-size: 0.8rem;
-            user-select: none;
+            font-size: 0.75rem;
+            color: var(--muted);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
 
+        /* クリックして増殖させるためのリンク */
         .node {
             cursor: crosshair;
-            border-bottom: 1px solid var(--link-line);
-            transition: background 0.2s;
+            border-bottom: 1px dashed var(--text);
+            transition: background-color 0.2s;
         }
 
         .node:hover {
-            background-color: rgba(0,0,0,0.05);
+            background-color: var(--highlight);
+        }
+        
+        .node.clicked {
+            color: var(--muted);
+            border-bottom: none;
+            cursor: default;
         }
 
-        /* 注釈のスタイル */
-        .scholium {
-            display: none;
-            margin-bottom: 2rem;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .scholium.active {
-            display: block;
-        }
-
-        .scholium-head {
-            font-family: sans-serif;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--faded-ink);
-            margin-bottom: 0.5rem;
-            border-bottom: 1px dotted var(--faded-ink);
-            display: inline-block;
-        }
-
-        .cross-reference {
-            cursor: pointer;
-            font-size: 0.9em;
-            border-bottom: 1px dashed var(--ink);
-        }
-
-        /* 侵食されたテキストの痕跡 */
-        .infected {
-            color: #000;
-            text-shadow: 0 0 1px rgba(0,0,0,0.3);
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes insertFade {
+            to { opacity: 1; transform: translateX(0); }
         }
     </style>
 </head>
 <body>
 
-    <!-- Left: The False Text -->
-    <div id="poem-pane">
-        <h1>映画的空間における境界の消失について</h1>
-        
-        <div class="line" id="line-1">
-            <span class="line-num">1</span>
-            <span class="text">フレームの外側に広がる<span class="node" data-target="invisible">不可視の領域</span>は、</span>
-        </div>
-        <div class="line" id="line-2">
-            <span class="line-num">2</span>
-            <span class="text">観客の無意識に作用し、<span class="node" data-target="boundary">境界</span>を溶解させる。</span>
-        </div>
-        <div class="line" id="line-3">
-            <span class="line-num">3</span>
-            <span class="text">カメラが捉えることのない<span class="node" data-target="void">空白</span>こそが、</span>
-        </div>
-        <div class="line" id="line-4">
-            <span class="line-num">4</span>
-            <span class="text"><span class="node" data-target="subject">真の主題</span>を雄弁に語るのである。</span>
-        </div>
-    </div>
-
-    <!-- Right: The Truth (Paranoia) -->
-    <div id="commentary-pane">
-        <div id="default-message" style="color: var(--faded-ink); font-size: 0.9rem;">
-            ※左側のテキスト内の単語をクリックして、注釈（Scholium）を開いてください。
+    <div class="container">
+        <!-- 最初のテキスト -->
+        <div class="manuscript">
+            <h2>映像における記憶の改変</h2>
+            <p>
+                我々がスクリーンを通して目撃するものは、決して客観的な現実ではない。カメラという装置は常に特定のフレームを切り取り、それ以外の世界を隠蔽する。そのとき、観客の脳内で起きているのは事実の受容ではなく、<span class="node" onclick="generateScholium(this, '隠蔽された文脈')">隠蔽された文脈</span>の恣意的な補完である。
+            </p>
         </div>
 
-        <!-- Scholium 1 -->
-        <div class="scholium" id="scholium-invisible">
-            <div class="scholium-head">Line 1: 不可視の領域</div>
-            <p>見えないもの。すなわち、1998年の冬にC.K.が私の机から手稿を盗み出した手口である。彼は私を夕食に誘い、私がコートを取りに行っていたその数分の「不可視」の時間を利用したのだ。彼はそれを映画理論として発表したが、真の主題は別のところにある。<span class="cross-reference" data-target="subject">［真の主題］を見よ</span>。</p>
-        </div>
-
-        <!-- Scholium 2 -->
-        <div class="scholium" id="scholium-boundary">
-            <div class="scholium-head">Line 2: 境界</div>
-            <p>私が住んでいたアパートの壁は薄く、隣室のタイプライターの音が常に私の空間（境界）を侵犯していた。しかし、本当に境界を越えてきたのは音ではなく、私の記憶を書き換えようとする彼らのシステムである。私がこのサイトを構築したのは、彼らの監視から逃れ、失われた<span class="cross-reference" data-target="kingdom">北方の記憶</span>を保存するためだ。</p>
-        </div>
-
-        <!-- Scholium 3 -->
-        <div class="scholium" id="scholium-void">
-            <div class="scholium-head">Line 3: 空白</div>
-            <p>C.K.の学位論文の第3章。私のノートからの完全な盗用である。彼が「空白（Void）」と呼ぶものは、私が追放された故郷で失った記憶の空洞に他ならない。テキストは沈黙しない。<span class="cross-reference" data-target="rewrite-1">［空白の充填］を実行せよ</span>。</p>
-        </div>
-
-        <!-- Scholium 4 -->
-        <div class="scholium" id="scholium-subject">
-            <div class="scholium-head">Line 4: 真の主題</div>
-            <p>映画の話など初めからしていない。私が語るべきは、暗い森、凍った湖、そして剥奪された私の王冠についてである。C.K.は私を誇大妄想狂と呼んだ。ならば、このテキストそのものに私の狂気を上書きしてやろう。<span class="cross-reference" data-target="rewrite-2">［真実の暴露］</span>。</p>
-        </div>
-
-        <!-- Hidden Scholium (The core of paranoia) -->
-        <div class="scholium" id="scholium-kingdom">
-            <div class="scholium-head">Index: 北方の記憶</div>
-            <p>彼らは私が忘れたと思っている。しかし、ゼムブラの雪の匂いを忘れることなどできようか？ 左側のテキストは隠れ蓑に過ぎない。あなたが今読んでいるこの注釈こそが、このサイトにおける「唯一の本文」である。<span class="cross-reference" data-target="rewrite-all">［すべてを取り戻す］</span>。</p>
-        </div>
+        <!-- 注釈が無限に積み上がるコンテナ -->
+        <div class="scholia-container" id="scholia-box"></div>
     </div>
 
     <script>
-        // The Architect's Variables
-        const usurper = "C.K.";
-        let sanityLevel = 100;
-        let isTextInfected = false;
+        // -------------------------------------------------------------
+        // パラノイア・エンジン (Paranoia Generation Engine)
+        // 編者が仕組んだ「文脈の自動生成アルゴリズム」
+        // -------------------------------------------------------------
 
-        const poemPane = document.getElementById('poem-pane');
-        const commentaryPane = document.getElementById('commentary-pane');
-        const defaultMessage = document.getElementById('default-message');
-
-        // Text Mutations (The Truth leaking into the facade)
-        const mutations = {
-            "rewrite-1": { lineId: "line-3", text: "盗まれた私の手稿の<span class='infected'>記憶</span>こそが、" },
-            "rewrite-2": { lineId: "line-4", text: "<span class='infected'>奪われた北方の王冠</span>を雄弁に語るのである。" },
-            "rewrite-all": { 
-                title: "記憶の回復について",
-                l1: "雪に閉ざされた<span class='infected'>ゼムブラの領域</span>は、",
-                l2: "監視者たちの目を逃れ、<span class='infected'>暗号</span>を形成させる。",
-                l3: "彼らが決して理解することのない<span class='infected'>狂気</span>こそが、",
-                l4: "<span class='infected'>私の真の歴史</span>を構築するのだ。"
-            }
+        // 語彙の辞書（ランダムに組み合わされるフラグメント）
+        const fragments = {
+            subjects: [
+                "C.K.が執筆したとされる学位論文は、",
+                "我々を監視しているあのシステムの構造は、",
+                "1998年の冬に彼が私の部屋から持ち去ったノートは、",
+                "ゼムブラの雪原に埋められた王の記憶は、",
+                "私がこのウェブサイトに密かに埋め込んだコードは、"
+            ],
+            actions: [
+                "表面上は映画理論を装いながら、",
+                "アカデミズムの正統性を盾にして、",
+                "私の存在そのものを抹消しようとする意図を隠しつつ、",
+                "暗号化されたメタファーとして機能し、",
+                "全くの無意味な記号の羅列として偽装され、"
+            ],
+            targets: [
+                "私の過去の記憶を冷酷に書き換えている。",
+                "彼自身の盗用の罪を告発し続けているのだ。",
+                "読者を終わりのないパラノイアの迷宮へと引きずり込む。",
+                "真の王位継承者が誰であるかを密かに証明している。",
+                "このテキストそのものが一つの罠であることを示している。"
+            ],
+            // 次のクリックを生み出す「感染性のキーワード」
+            triggers: [
+                "鏡の錯覚", "失われた手稿", "監視者の足音", "青白い炎", "零度のエクリチュール", "北方の幻影"
+            ]
         };
 
-        // Event Delegation for both Nodes and Cross-references
-        document.body.addEventListener('click', function(e) {
-            // Target is a node in the left pane or a cross-reference in the right pane
-            if (e.target.classList.contains('node') || e.target.classList.contains('cross-reference')) {
-                const targetId = e.target.getAttribute('data-target');
-                
-                // Check if it's a mutation trigger
-                if (targetId.startsWith('rewrite')) {
-                    applyMutation(targetId);
-                    return;
-                }
+        // ランダムな要素を配列から取得するヘルパー関数
+        function getRandom(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
 
-                // Show Commentary
-                activateScholium(targetId);
-            }
-        });
+        // 注釈のカウンター
+        let noteCount = 1;
 
-        function activateScholium(id) {
-            defaultMessage.style.display = 'none';
+        // クリック時に呼ばれる生成関数
+        function generateScholium(element, triggerWord) {
+            // 既にクリックされたリンクは無効化
+            if (element.classList.contains('clicked')) return;
+            element.classList.add('clicked');
+
+            // ランダムに文章を組み立てる
+            const subject = getRandom(fragments.subjects);
+            const action = getRandom(fragments.actions);
+            const target = getRandom(fragments.targets);
             
-            // Hide all scholia
-            document.querySelectorAll('.scholium').forEach(el => {
-                el.classList.remove('active');
+            // 次なる亀裂（クリッカブルな単語）をランダムに決定
+            const nextTrigger = getRandom(fragments.triggers);
+
+            // 文章を結合し、一部に次のリンクを仕込む
+            const generatedText = `${subject}${action}${target} だが、彼らが本当に恐れているのは、私が残した <span class="node" onclick="generateScholium(this, '${nextTrigger}')">${nextTrigger}</span> の存在なのだ。`;
+
+            // HTML要素の作成
+            const scholiumDiv = document.createElement('div');
+            scholiumDiv.className = 'scholium';
+            
+            scholiumDiv.innerHTML = `
+                <div class="scholium-header">Scholium ${noteCount} [Ref: ${triggerWord}]</div>
+                <div class="scholium-text">${generatedText}</div>
+            `;
+
+            // コンテナの末尾に追加
+            document.getElementById('scholia-box').appendChild(scholiumDiv);
+
+            noteCount++;
+
+            // スクロールを一番下へ滑らかに移動（無限の深みへ落ちていく演出）
+            window.scrollTo({
+                top: document.body.scrollHeight,
+                behavior: 'smooth'
             });
-
-            // Show target scholium
-            const targetScholium = document.getElementById(`scholium-${id}`);
-            if (targetScholium) {
-                targetScholium.classList.add('active');
-            }
-            
-            // The creator's subtle descent
-            sanityLevel -= 10;
-            if(sanityLevel < 50) {
-                document.body.style.backgroundColor = "#f0f0ea"; // Very subtle darkening of the room
-            }
         }
-
-        function applyMutation(mutationId) {
-            const m = mutations[mutationId];
-            
-            if (mutationId === "rewrite-all") {
-                // The ultimate takeover
-                poemPane.querySelector('h1').innerText = m.title;
-                document.getElementById('line-1').querySelector('.text').innerHTML = m.l1;
-                document.getElementById('line-2').querySelector('.text').innerHTML = m.l2;
-                document.getElementById('line-3').querySelector('.text').innerHTML = m.l3;
-                document.getElementById('line-4').querySelector('.text').innerHTML = m.l4;
-                isTextInfected = true;
-            } else {
-                // Partial infection
-                const lineEl = document.getElementById(m.lineId);
-                if(lineEl) {
-                    lineEl.querySelector('.text').innerHTML = m.text;
-                }
-            }
-            
-            // Redirect attention back to the (now changed) text
-            activateScholium('kingdom');
-        }
-
-        // console.log("If you are reading this, do not trust C.K.");
     </script>
 </body>
 </html>
