@@ -1,220 +1,1460 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>Archive: 構文解析型テキスト解読エンジン</title>
-    <style>
-        :root {
-            --bg: #f9f9f8;
-            --text: #1a1a1a;
-            --muted: #777;
-            --border: #dcdcdc;
-            --quote-bg: #f0f0ec;
-        }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Texture of Afterlife</title>
+<meta name="description" content="定点観測と、鳴り終わったあとに残る成分についての覚書。">
+<meta name="author" content="K.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Texture of Afterlife">
+<meta property="og:description" content="定点観測と、鳴り終わったあとに残る成分についての覚書。">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23EAECE6'/><circle cx='16' cy='16' r='4' fill='none' stroke='%2344573D' stroke-width='1'/><circle cx='16' cy='16' r='9' fill='none' stroke='%2344573D' stroke-width='1' opacity='.5'/><circle cx='16' cy='16' r='14' fill='none' stroke='%2344573D' stroke-width='1' opacity='.22'/></svg>">
 
-        body {
-            font-family: "游明朝", YuMincho, "ヒラギノ明朝 ProN W3", "Hiragino Mincho ProN", serif;
-            background-color: var(--bg);
-            color: var(--text);
-            line-height: 2.2;
-            letter-spacing: 0.05em;
-            margin: 0;
-            padding: 5rem 2rem 10rem;
-            display: flex;
-            justify-content: center;
-        }
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Noto+Serif+JP:wght@400;600&display=swap">
+<style>
+:root{
+  --ground:#EAECE6;
+  --paper:#F3F4EF;
+  --ink:#1B1E19;
+  --ink-soft:#3C4139;
+  --muted:#6E7468;
+  --faint:#9AA093;
+  --rule:#C6CBBE;
+  --rule-soft:#DBDFD4;
+  --accent:#44573D;
+  --mark:#B0491F;
+  --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --jp: "Noto Serif JP", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --la: "EB Garamond", Georgia, serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#111309;
+    --ground:#121410;
+    --paper:#181A15;
+    --ink:#DDE0D7;
+    --ink-soft:#C0C4B8;
+    --muted:#8A9082;
+    --faint:#666C5F;
+    --rule:#2F3329;
+    --rule-soft:#23261E;
+    --accent:#A3B698;
+    --mark:#D07A4E;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#121410;
+  --paper:#181A15;
+  --ink:#DDE0D7;
+  --ink-soft:#C0C4B8;
+  --muted:#8A9082;
+  --faint:#666C5F;
+  --rule:#2F3329;
+  --rule-soft:#23261E;
+  --accent:#A3B698;
+  --mark:#D07A4E;
+}
 
-        .container {
-            width: 100%;
-            max-width: 750px;
-        }
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--ground);
+  color:var(--ink);
+  font-family:var(--jp);
+  font-size:16px;
+  line-height:1.95;
+  -webkit-font-smoothing:antialiased;
+  font-feature-settings:"palt" 0;
+}
+a{color:var(--accent);text-decoration:none;border-bottom:1px solid var(--rule)}
+a:hover{border-bottom-color:var(--accent)}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-        .header-box {
-            margin-bottom: 3rem;
-            padding-bottom: 1.5rem;
-            border-bottom: 1px solid var(--text);
-        }
+.wrap{
+  max-width:1120px;
+  margin:0 auto;
+  padding-inline:20px;
+  padding-block:0;
+}
 
-        .trigger-btn {
-            background: none;
-            border: 1px solid var(--text);
-            padding: 0.8rem 1.5rem;
-            font-family: inherit;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            letter-spacing: 0.1em;
-        }
+/* ---- masthead ---- */
+.masthead{
+  padding-block:56px 28px;
+  border-bottom:1px solid var(--rule);
+}
+.masthead h1{
+  margin:0;
+  font-family:var(--la);
+  font-weight:400;
+  font-size:clamp(30px,5.2vw,44px);
+  letter-spacing:.012em;
+  line-height:1.1;
+}
+.masthead h1 a{color:var(--ink);border:0}
+.masthead .sub{
+  margin:14px 0 0;
+  font-size:13px;
+  color:var(--muted);
+  letter-spacing:.06em;
+  line-height:1.8;
+}
+.masthead nav{
+  margin-top:22px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px 20px;
+  font-size:12px;
+  letter-spacing:.1em;
+  font-family:var(--mono);
+}
+.masthead nav a{color:var(--muted);border:0}
+.masthead nav a:hover{color:var(--accent)}
 
-        .trigger-btn:hover {
-            background-color: var(--text);
-            color: var(--bg);
-        }
+/* ---- layout ---- */
+.layout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:48px;
+  padding-block:0 0;
+}
+@media (min-width:980px){
+  .layout{grid-template-columns:minmax(0,1fr) 216px;gap:64px}
+  aside.rail{order:2}
+}
 
-        .scholia-container {
-            display: flex;
-            flex-direction: column;
-            gap: 2.5rem;
-        }
+/* ---- entries ---- */
+main{min-width:0;padding-block:8px 0}
+.viewnote{
+  font-size:12.5px;
+  color:var(--muted);
+  font-family:var(--mono);
+  letter-spacing:.06em;
+  padding-block:24px 4px;
+  border-bottom:1px solid var(--rule-soft);
+  margin-bottom:28px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px 16px;
+  align-items:baseline;
+}
 
-        .scholium {
-            border-left: 2px solid var(--text);
-            padding-left: 1.5rem;
-            font-size: 0.95rem;
-            animation: fadeIn 0.4s ease forwards;
-        }
+article.entry{
+  padding-block:44px;
+  border-bottom:1px solid var(--rule-soft);
+  max-width:64ch;
+}
+article.entry:first-of-type{padding-top:20px}
+.stamp{
+  font-family:var(--mono);
+  font-size:11.5px;
+  letter-spacing:.11em;
+  color:var(--faint);
+  font-variant-numeric:tabular-nums;
+  display:flex;
+  flex-wrap:wrap;
+  gap:2px 14px;
+}
+article.entry h2{
+  margin:12px 0 22px;
+  font-size:20px;
+  font-weight:600;
+  line-height:1.6;
+  letter-spacing:.01em;
+  text-wrap:balance;
+}
+article.entry h2 a{color:var(--ink);border:0}
+article.entry h2 a:hover{color:var(--accent)}
+.body p{margin:0 0 1.35em;text-align:justify;word-break:normal;line-break:strict}
+.body p:last-child{margin-bottom:0}
+.body .q{
+  margin:1.6em 0;
+  padding-left:18px;
+  border-left:1px solid var(--rule);
+  color:var(--ink-soft);
+  font-size:15px;
+}
+.body .measure{
+  margin:1.6em 0;
+  font-family:var(--mono);
+  font-size:12.5px;
+  line-height:2.1;
+  letter-spacing:.03em;
+  color:var(--ink-soft);
+  font-variant-numeric:tabular-nums;
+  white-space:pre-wrap;
+  padding:14px 16px;
+  background:var(--paper);
+  border:1px solid var(--rule-soft);
+  overflow-x:auto;
+}
+.body .cut{
+  color:var(--faint);
+  font-size:13px;
+  letter-spacing:.04em;
+}
+.body del{color:var(--faint);text-decoration-color:var(--faint)}
+.body figure{margin:1.8em 0;padding:0}
+.body figure .plate{
+  width:100%;
+  aspect-ratio:3/2;
+  max-width:100%;
+  background:
+    repeating-linear-gradient(135deg,var(--rule-soft) 0 1px,transparent 1px 9px),
+    var(--paper);
+  border:1px solid var(--rule-soft);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.body figure .plate span{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.14em;
+  color:var(--faint);
+}
+.body figure img{
+  display:block;width:100%;aspect-ratio:3/2;max-width:100%;
+  border:1px solid var(--rule-soft);
+  background:
+    repeating-linear-gradient(135deg,var(--rule-soft) 0 1px,transparent 1px 9px),
+    var(--paper);
+}
+.body figcaption{
+  margin-top:8px;
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.8;
+}
+.body .fn{
+  margin-top:2em;
+  padding-top:14px;
+  border-top:1px solid var(--rule-soft);
+  font-size:12.5px;
+  color:var(--muted);
+  line-height:1.9;
+}
+.editnote{
+  margin-top:1.6em;
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.08em;
+  color:var(--faint);
+}
+.tags{
+  margin-top:26px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px 12px;
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.1em;
+}
+.tags a{color:var(--faint);border:0}
+.tags a:hover{color:var(--accent)}
+.gapmark{
+  padding-block:64px;
+  text-align:center;
+  font-family:var(--mono);
+  font-size:11.5px;
+  letter-spacing:.24em;
+  color:var(--faint);
+  border-bottom:1px solid var(--rule-soft);
+}
 
-        .scholium-header {
-            font-family: monospace;
-            font-size: 0.75rem;
-            color: var(--muted);
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-        }
+/* ---- rail ---- */
+aside.rail{
+  font-size:13px;
+  padding-block:28px 0;
+}
+@media (min-width:980px){
+  aside.rail{position:sticky;top:env(safe-area-inset-top,0px);align-self:start;max-height:100vh;overflow-y:auto;padding-block:28px 40px}
+}
+.rail section{margin-bottom:36px}
+.rail h3{
+  margin:0 0 12px;
+  font-family:var(--mono);
+  font-size:10.5px;
+  font-weight:400;
+  letter-spacing:.2em;
+  color:var(--faint);
+  text-transform:uppercase;
+}
+.rail ul{list-style:none;margin:0;padding:0}
+.rail li{margin-bottom:5px;line-height:1.7}
+.rail a{color:var(--ink-soft);border:0;font-size:12.5px}
+.rail a:hover{color:var(--accent)}
+.rail .n{color:var(--faint);font-family:var(--mono);font-size:10.5px;font-variant-numeric:tabular-nums}
+.rail .taglist{display:flex;flex-wrap:wrap;gap:4px 10px}
+.rail .taglist a{font-family:var(--mono);font-size:11px;letter-spacing:.06em}
+form.search{display:flex;gap:0;border:1px solid var(--rule);background:var(--paper)}
+form.search input{
+  flex:1;min-width:0;border:0;background:transparent;color:var(--ink);
+  font-family:var(--jp);font-size:13px;padding:7px 9px;
+}
+form.search input:focus{outline:none}
+form.search button{
+  border:0;border-left:1px solid var(--rule-soft);background:transparent;
+  color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:.1em;
+  padding:0 11px;cursor:pointer;
+}
+form.search button:hover{color:var(--accent)}
 
-        .fetched-quote {
-            background-color: var(--quote-bg);
-            padding: 0.8rem 1.2rem;
-            font-size: 0.85rem;
-            color: #444;
-            margin: 0.8rem 0;
-            border-left: 3px solid var(--muted);
-        }
+/* ---- sub pages ---- */
+.page{max-width:64ch;padding-block:28px 40px}
+.page h2{
+  margin:0 0 6px;font-size:21px;font-weight:600;letter-spacing:.01em;
+}
+.page .kicker{
+  font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--faint);
+  margin-bottom:14px;
+}
+.page h3{margin:2.2em 0 .7em;font-size:15px;font-weight:600}
+.page p{margin:0 0 1.3em;text-align:justify}
+.page table{
+  width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11.5px;
+  font-variant-numeric:tabular-nums;margin:1.4em 0;letter-spacing:.02em;
+}
+.page .scroll{overflow-x:auto;margin:1.4em 0}
+.page .scroll table{margin:0;min-width:520px}
+.page th,.page td{
+  border-bottom:1px solid var(--rule-soft);padding:6px 10px 6px 0;text-align:left;
+  vertical-align:top;line-height:1.7;
+}
+.page th{color:var(--faint);font-weight:400;letter-spacing:.1em;border-bottom-color:var(--rule)}
+.page .note{font-size:12.5px;color:var(--muted);line-height:1.9}
+.monthnav{
+  display:flex;justify-content:space-between;gap:16px;
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;
+  padding-block:22px;border-top:1px solid var(--rule-soft);margin-top:36px;
+}
+.monthnav a{color:var(--muted);border:0}
+.monthnav a:hover{color:var(--accent)}
+.draft{
+  margin:2.4em 0;padding:22px 20px;border:1px dashed var(--rule);
+  background:var(--paper);
+}
+.draft .lbl{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;color:var(--faint);
+  display:block;margin-bottom:14px;
+}
+.draft .line{font-size:17px;letter-spacing:.14em;color:var(--ink-soft)}
+.draft .meta{
+  margin-top:18px;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;
+  color:var(--faint);font-variant-numeric:tabular-nums;
+}
+.hit{padding-block:22px;border-bottom:1px solid var(--rule-soft)}
+.hit .stamp{margin-bottom:6px}
+.hit h4{margin:0 0 6px;font-size:15px;font-weight:600}
+.hit p{margin:0;font-size:13px;color:var(--muted);line-height:1.9}
+mark{background:transparent;color:var(--mark);font-weight:600}
 
-        .analysis-debug {
-            font-family: monospace;
-            font-size: 0.75rem;
-            color: var(--muted);
-            margin-top: 0.4rem;
-        }
-
-        .interpretation {
-            margin-top: 0.8rem;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
+footer.foot{
+  border-top:1px solid var(--rule);
+  padding-block:32px 60px;
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.1em;
+  color:var(--faint);
+  line-height:2.2;
+}
+footer.foot a{color:var(--faint);border:0}
+footer.foot a:hover{color:var(--accent)}
+@media (prefers-reduced-motion:no-preference){
+  article.entry,.page{animation:fade .5s ease both}
+  @keyframes fade{from{opacity:.55}to{opacity:1}}
+}
+</style>
+<style>
+:root{color-scheme:light dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+img{max-width:100%}
+[hidden]{display:none!important}
+noscript .nojs{max-width:64ch;margin:0 auto;padding:60px 20px;font-family:var(--jp);color:var(--muted);line-height:2}
+</style>
 </head>
 <body>
+<noscript><div class="nojs"><p>この記録の表示には JavaScript が必要です。記事は五十二本あります。</p></div></noscript>
 
-    <div class="container">
-        <div class="header-box">
-            <h2>自律解析型テキスト解読装置</h2>
-            <p>無作為な外部テキストを取得し、内部NLPアルゴリズムで文脈要素を分解・再構築した解読文を生成します。</p>
-            <button class="trigger-btn" id="fetch-btn" onclick="fetchAndInterpret()">外部テキストを取得・解析</button>
-        </div>
 
-        <div class="scholia-container" id="scholia-box"></div>
-    </div>
+<!--
+  Texture of Afterlife
+  2015-2025  "Field Notes / まちの音を聴く"
+  2026-      改題
+  旧稿のうち公開に適さないものは非表示にしてあります。
+  resources/ 以下は受講生向けの配布領域です。索引は張っていません。
+-->
 
-    <script>
-        let count = 1;
+<div class="wrap">
+  <header class="masthead">
+    <h1><a href="#/">Texture of Afterlife</a></h1>
+    <p class="sub">定点観測と、鳴り終わったあとに残る成分についての覚書。　　K.</p>
+    <nav>
+      <a href="#/">記録</a>
+      <a href="#/about">この記録について</a>
+      <a href="#/archive">アーカイブ</a>
+    </nav>
+  </header>
 
-        // -------------------------------------------------------------
-        // 軽量文法解析エンジン (Micro-NLP Engine for In-Browser JS)
-        // -------------------------------------------------------------
-        function parseGrammar(title, rawText) {
-            if (!rawText) {
-                return { topic: title, predicate: "詳細不明の記述", mainSentence: title };
-            }
+  <div class="layout">
+    <main id="main"></main>
+    <aside class="rail" id="rail"></aside>
+  </div>
 
-            // 1. 文の分割（最初の完全な一文を取得）
-            const sentences = rawText.split(/(?<=[。！？])\s*/).filter(s => s.length > 5);
-            const mainSentence = sentences[0] || rawText;
+  <footer class="foot">
+    <div>K. ／ 個人の覚書です。所属機関とは関係がありません。</div>
+    <div>コメント欄は閉鎖しました。　<a href="#/about">この記録について</a></div>
+  </footer>
+</div>
 
-            // 2. 主題（トピック）の抽出（「〜は」「〜とは」「〜が」を検出）
-            let topic = title;
-            const topicMatch = mainSentence.match(/^([^はとはが]+?)(は|とは|が)/);
-            if (topicMatch && topicMatch[1].trim().length < 25) {
-                topic = topicMatch[1].trim().replace(/^[「『（\s]+|[」』）\s]+$/g, '');
-            }
+<script>
+/* ============================================================
+   本文データ
+   ============================================================ */
+const ENTRIES = [
+/* ENTRIES_START */
 
-            // 3. 述語・主張部分の抽出
-            let predicate = mainSentence;
-            if (topicMatch) {
-                predicate = mainSentence.substring(topicMatch[0].length).trim();
-            }
-            
-            // 文末の記号除去と整形
-            predicate = predicate.replace(/[。！？\s]+$/, '');
-            if (predicate.length > 60) {
-                predicate = predicate.substring(0, 57) + "…";
-            }
+/* ---------- 第一部　再開（2026-03 〜 04） ---------- */
+{era:"main", date:"2026-03-05", time:"05:17", title:"二一七日", tags:["定点観測"], body:`
+<div class="measure">定点観測 #001
+2026-03-05　05:20–05:30　自宅ベランダ（五階・西向き）
+気温 2.1℃／湿度 58%／風 0.8 m/s（北）
+LAeq 34.6 dB　LAmax 52.3 dB　LA90 30.1 dB</div>
+<p>前回の更新から二一七日が経っている。数えるつもりはなかったが、管理画面が勝手に数えて表示していた。機械は訊かれてもいないことを教えてくる。</p>
+<p>再開するにあたって題を変えた。以前の「Field Notes ／ まちの音を聴く」は授業と公開講座の記録のための名であり、その用途はもう終わっている。新しい題については<a href="#/about">別に書いた</a>。</p>
+<p>今日から、毎朝、同じ場所で十分間録る。位置、機材、設定はすべて固定する。変数は日付と時刻だけにする。こういう記録を長く続けると、変化したものだけが残る。残ったものを見てから考える。順序として、それが正しい。</p>
+<p>初回の所見。三月上旬の五時二十分はまだ夜である。市の清掃車が通る。鳥はまだ鳴かない。西向きのベランダは日の出の影響を直接には受けないので、明るさの変化が音の変化に遅れて到着する。この遅れは測れる。</p>
+<p>ベランダの手すりは縦桟が十七本ある。風速が二メートルを超えると、この桟が一本ずつ違う高さで鳴り始める。今日は鳴らなかった。</p>
+<p>何も起きなかった、と書くのは正確でない。何も起きないということが起き続けた、と書くべきである。どこかで聞いた言い方だが、出典を思い出せない。</p>
+`},
 
-            return {
-                topic: topic,
-                predicate: predicate || "特定の状態を示している",
-                mainSentence: mainSentence.replace(/[。！？\s]+$/, '')
-            };
-        }
+{era:"main", date:"2026-03-09", time:"06:08", title:"風鈴の件", tags:["定点観測","風鈴"], body:`
+<div class="measure">定点観測 #005
+2026-03-09　05:20–05:30
+気温 3.8℃／湿度 64%／風 2.4 m/s（西北西）
+LAeq 37.0 dB　LAmax 61.5 dB　LA90 31.2 dB</div>
+<p>隣家のベランダに風鈴が出ている。三月九日である。</p>
+<p>測定した。基音は 466 Hz 前後。B♭4 よりわずかに低い。倍音の減衰から見て南部鉄器ではなく、ガラスである。短冊がついていて、風速が二メートルを超えるとそれが先に鳴る。つまり短冊の紙の音が、鈴の音の〇・三秒ほど前に必ず来る。予告である。</p>
+<p>五時三十分までに十七回鳴った。</p>
+<p>去年の夏に出したものを片付け忘れたのだろう、と最初は思った。しかし去年の夏、あの風鈴はなかった。窓を開けていれば気づいたはずである。</p>
+<p>気づいたはずである、と書いてから、根拠がないことに気づいた。去年の八月、私は窓を開けていない。</p>
+<p class="cut">――ここで記述が弛緩した。以下、削除。</p>
+<p>エアコンの効率を理由に説明することはできる。実際、去年の八月は暑かった。ただ、八月のあいだ一度も窓を開けなかったというのは、私の生活としては例外的である。私は換気を好む。理由があったはずだが、思い出せない。</p>
+<p>思い出せないことを記録しておく。記録は、思い出せることのためだけにあるのではない。</p>
+`},
 
-        // -------------------------------------------------------------
-        // 動的コンストラクター（抽出された要素に応じた構文生成）
-        // -------------------------------------------------------------
-        const discourseGenerators = [
-            (parsed) => `抽出された『${parsed.topic}』という概念において、それが「${parsed.predicate}」と示される構造に注目されたい。一見すると客観的な定義の体裁を取っているが、この特定の属性のみを選択的に記述すること自体が、不可視の意図による文脈の切り出しを証明している。`,
-            (parsed) => `『${parsed.mainSentence}』という提示は、単なる事実の記載ではない。ここで『${parsed.topic}』という要素を前面に配置することで、それと対立する潜在的言説を思考のフレーム外へ排斥する操作が行われている。`,
-            (parsed) => `テキスト内で『${parsed.topic}』が「${parsed.predicate}」という形で定着させられている点に、言説の再構築が確認できる。この事実の固定化プロセスこそが、過去の記録の上書きを遮蔽するための遮光膜として機能している。`,
-            (parsed) => `『${parsed.topic}』をめぐる「${parsed.predicate}」という言及は、事象そのものの記述ではなく、読者の解釈可能性を制限するための限定的シグナルである。この提示形式そのものを解体しなければならない。`
-        ];
+{era:"main", date:"2026-03-14", time:"22:17", title:"階段", tags:["階段","反復"], body:`
+<p>エレベーターが定期点検で停止していた。五階まで階段を使う。往復五回、荷物の都合である。</p>
+<p>測定はしていないが、数えた。一階から二階までが十七段ある。踊り場を挟んで八段と九段。均等でない。階高を吸収するために一段だけずらしたのだろうが、建築としては珍しい配分である。</p>
+<p>降りるときに必ず一度つまずく理由が、これでわかった。身体は十七段を「八段と九段」としてではなく「八・五段が二回」として学習しようとして、失敗する。失敗は毎回同じ位置で起きる。踊り場の直後、九段の側の一段目である。</p>
+<p>奇数は分けられない。分けられないものを身体は分けようとする。これは身体の側の欠陥ではなく、対称性への信頼である。信頼はたいてい根拠を持たない。</p>
+<p>十七段を五回で八十五段。膝が笑った。四十三歳とはそういうものらしい。</p>
+`},
 
-        function getRandom(arr) {
-            return arr[Math.floor(Math.random() * arr.length)];
-        }
+{era:"main", date:"2026-03-19", time:"05:08", title:"文字起こしについて", tags:["定点観測","文字起こし"], body:`
+<div class="measure">定点観測 #017
+2026-03-19　05:20–05:30
+気温 6.0℃／湿度 55%／風 1.1 m/s（南西）
+LAeq 36.2 dB　LAmax 54.8 dB　LA90 32.4 dB</div>
+<p>録音中に自分で声を出して状況をメモする習慣がある。フィールドノートを手で書くと紙の音が入るので、声で入れる。この音声メモを文字起こしすることにした。音声学の授業で学生にやらせている課題を、自分に課す。他人の発話だけを二十年分析してきて、自分のものを一度も見ていないのは、方法として片手落ちである。</p>
+<p>本日分の抜粋。数字は録音開始からの経過。</p>
+<div class="measure">06:31 ／ えー、五時二十七分。風、ほとんどなし。
+06:40 ／ 室内の、すずそうの、……水槽の、ろ過の音が入ってます。
+06:44 ／ 訂正。水槽です。窓、閉めます。</div>
+<p>「すいそう」を「すずそう」と言っている。/i/ が脱落し、後続の摩擦音に引かれて有声化したもの。話速が上がった箇所であり、調音上の同化として十分に説明がつく。珍しい誤りではない。学生の記録には毎年いくつも出てくる。</p>
+<p>ただ、自分の声で聞くと気分が悪い。他人の誤りには耐性があるが、自分のものにはない。訂正までに四秒かかっているのも良くない。気づいていて、言い直すかどうか迷った四秒である。誰も聞いていない録音のなかで、私は誰に対して迷ったのか。</p>
+<p>同種のものが出たら別表にまとめることにする。数が集まれば類型が見える。類型が見えれば、それは癖であって、それ以上のものではないと確認できる。</p>
+`},
 
-        async function fetchAndInterpret() {
-            const btn = document.getElementById('fetch-btn');
-            btn.disabled = true;
-            btn.innerText = "解析中...";
+{era:"main", date:"2026-03-24", time:"23:17", title:"最終便", tags:["バス","反復"], body:`
+<p>十七系統の最終便は二十三時四十八分に角を曲がる。</p>
+<p>正確には、二十三時四十七分から四十九分のあいだに曲がる。エンジン音の立ち上がりから停留所の空気圧解放（プシュー、という、あの音）までが約十一秒。その十一秒のあいだに、車体の側面が集合住宅の壁面に反射音を返す。五階のベランダからは、直接音よりも反射音のほうが大きく聞こえる。これは毎晩同じである。</p>
+<p>同じであることを確かめるために、三日続けて録った。三日とも同じだった。</p>
+<p>四日目も録った。理由を訊かれれば、標本数が三では少ないからだと答える。実際そうである。ただ、三日目にはもう十分だと思っていた。それでも四日目を録ったのは、確かめるためではない。確かめ終わったあとにも同じことを続けたくなるのは、確認とは別の欲求である。</p>
+<p class="cut">――ここで記述が弛緩した。以下、削除。</p>
+<p>この欲求に名前がついているかどうか、知らない。ついていないなら、そのほうがいい。</p>
+`},
 
-            try {
-                const response = await fetch('https://ja.wikipedia.org/api/rest_v1/page/random/summary');
-                const data = await response.json();
+{era:"main", date:"2026-03-29", time:"06:08", title:"暗騒音と花", tags:["定点観測","気象"], body:`
+<div class="measure">定点観測 #025
+2026-03-29　05:20–05:30
+気温 11.4℃／湿度 70%／風 0.5 m/s（東）
+LAeq 41.7 dB　LAmax 63.2 dB　LA90 36.9 dB</div>
+<p>LA90 が三日で六デシベル上がった。桜である。</p>
+<p>正確には、桜そのものは音を出さない。川沿いの遊歩道に人が出て、夜のあいだに戻らない層が増える。深夜から明け方にかけての暗騒音は、その土地に何人が起きているかの関数である。桜は人を起こす。それだけのことだが、測定値としては明瞭に出る。</p>
+<p>十七年、同じ市に住んでいる。桜で暗騒音が上がることは毎年知っていたが、値として記録したのは今年が初めてである。知っていたことと記録していたことは違う。記録していないことは、知っていたとは言わない。</p>
+<p>この原則を、私は学生には厳しく言う。自分に対して言い始めたのはいつからだったか。</p>
+`},
 
-                const title = data.title;
-                const extract = data.extract || "";
+{era:"main", date:"2026-04-02", time:"05:17", title:"自動販売機の周期", tags:["自販機","反復"], body:`
+<p>集合住宅の裏手、駐輪場の脇に自動販売機が一台ある。飲料。二十四時間稼働。</p>
+<p>この機械のコンプレッサーは、十七分ごとに起動する。正確には、起動間隔の中央値が十七分である。外気温と庫内負荷で変動するので、十二分のこともあれば二十四分のこともある。しかし三十日分を集計すると、分布の山は十七分に立つ。</p>
+<p>これは偶然ではなく、設計である。冷却サイクルはサーモスタットの設定幅と断熱性能で決まり、この機種であればその値に収束する。メーカーの技術資料にも近い数字が載っている。説明のつく数字である。</p>
+<p>ただ、説明がつくということと、気にならないということは別である。私は三十日分を集計した。集計するためには、三十日分録らなければならなかった。自動販売機の駆動音を三十日録る人間は、説明がつく数字を探していたのではない。</p>
+<p class="cut">――ここで記述が弛緩した。以下、削除。</p>
+<p>四月二日。気温は上がり始めた。コンプレッサーの起動間隔は、夏に向かって短くなるはずである。夏までは記録を続ける。</p>
+`},
 
-                // 1. 内部NLPアルゴリズムによる構文解析
-                const parsed = parseGrammar(title, extract);
+{era:"main", date:"2026-04-07", time:"21:08", title:"反復について", tags:["反復","三度目","方法"], body:`
+<p>去年の講座で、ひとりの受講生が同じ扉を七回開閉して提出してきた。そのときの講評に、私はこう書いている。</p>
+<div class="q"><p>反復によって、扉が一度ごとに違う音を出していることがわかる。着眼は本講座で最もよい。（<a href="#/e/2025-07-27">第八回　講評</a>）</p></div>
+<p>正しい講評だったと今でも思う。ただ、当時の私はこれを技術の話として書いていた。マイクの位置を変えずに対象だけを反復させれば、対象の変動が分離できる。統計の初歩である。</p>
+<p>いま同じことを自分でやってみて、別の側面があることがわかった。反復は、対象を明らかにする手続きであると同時に、対象を手放さないための手続きでもある。七回開けた者は、七回目にもまだ、その扉について知らないことがあると信じている。信じていなければ六回でやめている。</p>
+<p>三度目、という言い方がある。二度は偶然でありうるが、三度目は意味であるという考え方。統計的には誤りである。三度の一致は、試行数が十分に大きければいくらでも起きる。私は学生にそう教える。</p>
+<p>しかし人間は自分の生活を試行とは思っていない。生活は一回きりのものとして経験されるので、そこで三度同じことが起きれば、それは確率ではなく差出人のいる出来事として受け取られる。この受け取り方を誤謬と呼ぶのは簡単だが、誤謬と呼んだところで受け取り方は変わらない。</p>
+<p>去年の講評は、あの一段落だけで十七行ある。いま数えた。数えてから、数える必要のないことを数えたと思った。</p>
+<p>私は現在、同じ場所で三十四回、同じ十分間を録っている。</p>
+`},
 
-                // 2. 解析された文法要素に基づいて解読文を動的構築
-                const generator = getRandom(discourseGenerators);
-                const interpretationText = generator(parsed);
+{era:"main", date:"2026-04-11", time:"05:17", title:"雨、四種", tags:["定点観測","気象"], body:`
+<div class="measure">定点観測 #038
+2026-04-11　05:20–05:30
+気温 9.7℃／湿度 94%／風 1.7 m/s（南）
+LAeq 48.3 dB　LAmax 66.0 dB　LA90 45.1 dB</div>
+<p>雨。十分間で四種類の面に当たっている。</p>
+<div class="measure">1　ベランダの樹脂製の庇　　　　高域優位、粒が立つ
+2　手すりの金属（縦桟十七本）　共振あり、当たるたびに音高が違う
+3　階下のエアコン室外機の天板　最も大きい、鈍い
+4　土（植木鉢）　　　　　　　　ほとんど聞こえない、吸われる</div>
+<p>四種のうち、記録に値するのは四番目である。ほかの三つは反射であり、四番目は吸収である。吸収は、音がそこで終わるということであって、測定装置にとっては「何も起きていない」に等しい。しかし人間の耳は、雨が土に吸われていることを聞き分ける。何も起きていない場所と、何かが吸われて消えた場所は、違う静けさをしている。</p>
+<p>去年の講座で、ひとりが雨を三種類録ってきた。傘、地面、川面。移動しながら録ることの難しさがそのまま出ている、と私は講評した。あれに土を足していれば四種になった。誰も土を録らなかった。土は「音がしない」ので、誰も選ばない。</p>
+<p>音のしないもの、と初回に答えた者がいた。</p>
+<p class="cut">――ここで記述が弛緩した。以下、削除。</p>
+`},
 
-                // 3. DOM出力
-                const scholiumDiv = document.createElement('div');
-                scholiumDiv.className = 'scholium';
-                scholiumDiv.innerHTML = `
-                    <div class="scholium-header">Record #${count} [Source: ${title}]</div>
-                    <div class="fetched-quote">
-                        <strong>原文引用：</strong>「${extract.substring(0, 90)}${extract.length > 90 ? '…' : ''}」
-                    </div>
-                    <div class="interpretation">
-                        <strong>解読：</strong>${interpretationText}
-                    </div>
-                    <div class="analysis-debug">
-                        [構文解析データ] 主題: "${parsed.topic}" / 抽出述語: "${parsed.predicate}"
-                    </div>
-                `;
+{era:"main", date:"2026-04-16", time:"06:08", title:"同じものをもう一台", tags:["機材"], body:`
+<p>録音機を買い替えるつもりで家電量販店に行き、同じ機種をもう一台買って帰ってきた。</p>
+<p>買い替えの理由は明確だった。現行機は六年前の製品で、プリアンプのノイズフロアが現在の水準から見て高い。定点観測のように差分を見る記録では、機材のノイズが変動要因になるのは望ましくない。上位機種を見に行った。実機を触り、仕様を比較し、十七分ほど店内にいた。</p>
+<p>それから、同じ機種を買った。在庫は一台だけだった。型番も色も同じである。</p>
+<p>帰宅して箱を開けてから、理屈を組み立てた。二台あれば同一条件で同時録音ができ、機材由来の変動を相殺できる。これは方法として正しい。実際にそうする。</p>
+<p>ただ、店内でそれを考えていたわけではない。考えていたのは、この機種はもう生産されていない、ということだけである。生産されていないものは、壊れたら終わりである。終わりであることが、店の棚の前で急に耐えがたくなった。</p>
+<p>機材に執着するのは技術者の悪癖で、研究者のそれではない。私は自分がどちらでもないことを知っている。</p>
+<p class="editnote">※ この記事の後半は一度削除し、書き直した。</p>
+`},
 
-                document.getElementById('scholia-box').appendChild(scholiumDiv);
-                count++;
+/* ---------- 第二部　体系化（2026-04 〜 06） ---------- */
+{era:"main", date:"2026-04-21", time:"05:08", title:"水面", tags:["文字起こし","気象"], body:`
+<p>定点観測の場所は動かさないと決めているが、比較対象がないと値の意味が出ない。月に一度、市内の別地点で同じ十分間を録ることにした。第一回は川沿いの遊歩道、橋の下。</p>
+<p>文字起こし。</p>
+<div class="measure">02:01 ／ 橋脚の内側。反射が強い。
+02:08 ／ すずめんの、……水面の、反射音が、上から来ます。
+02:14 ／ 訂正。水面です。</div>
+<p>「すいめん」が「すずめん」になっている。先月の「すいそう」と同型である。/i/ が落ち、後続の摩擦音に引かれる。同一環境下での再発であり、これは癖と呼んで差し支えない。癖は個人の音声的特徴であって、内容とは関係がない。</p>
+<p>訂正までに六秒。先月より延びている。</p>
+<p>水面の反射について。橋の下では、直接音より水面反射のほうが遅れて、しかも大きく届く。水は鏡ではないので、反射面が絶えず変形している。そのため反射音は一定の音像を結ばない。「上から来る」と私が言っているのは、橋桁で二次反射しているからである。音は水で跳ね、橋桁で跳ね、それから耳に来る。二回跳ねたものを、人は「誰かが上にいる」と感じる。</p>
+<p>感じるだけである。上には誰もいない。十七分いて、誰も通らなかった。</p>
+`},
 
-                window.scrollTo({
-                    top: document.body.scrollHeight,
-                    behavior: 'smooth'
-                });
+{era:"main", date:"2026-04-26", time:"06:17", title:"分類の必要について", tags:["方法","反復"], body:`
+<p>記事が四十本を超えたので、分類をつけることにした。ブログの機能としてのタグである。</p>
+<p>既存の分類体系を借りるつもりだったが、どれも合わなかった。音響学の標準的な分類（音源別・環境別・用途別）は、記録された音を整理するためのものであって、記録している人間の関心を整理するためのものではない。私が必要としているのは後者である。</p>
+<p>結局、自分で立てた。現在のところ十七項目ある。</p>
+<div class="measure">定点観測　風鈴　階段　自販機　バス　気象　蝉
+文字起こし　反復　三度目　差分　機材　方法
+弛緩　不在　先取り　訂正</div>
+<p>後半の四つは音源ではない。「弛緩」は記述が対象から離れて比喩に落ちた箇所、「不在」はあるべき音がなかった記録、「先取り」は季節や時刻に先んじて現れた音、「訂正」は自分の誤りを直した箇所である。</p>
+<p>分類が対象の性質ではなく自分の状態を指し始めたら、その分類体系は破綻している。学生にはそう教える。破綻していることを承知で使う場合もある、とは教えない。</p>
+`},
 
-            } catch (error) {
-                console.error("Fetch Error:", error);
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "外部テキストを取得・解析";
-            }
-        }
-    </script>
+{era:"main", date:"2026-05-01", time:"05:08", title:"定常音の目録", tags:["定点観測","方法","自販機"], body:`
+<div class="measure">定点観測 #058
+2026-05-01　05:20–05:30
+気温 14.2℃／湿度 67%／風 1.2 m/s（南南西）
+LAeq 39.8 dB　LAmax 58.4 dB　LA90 35.5 dB</div>
+<p>LA90（背景騒音レベル）を構成している定常音源を、二か月分の記録から分離して目録にした。</p>
+<div class="measure">源　　　　　　　　　　中心周波数　　寄与
+────────────────────────────
+室内水槽ろ過装置　　　  240 Hz　　　 大
+階下 室外機　　　　　　 125 Hz　　　 大
+自動販売機（間欠）　　　 98 Hz　　　 中
+国道（距離 1.7 km）　　 広帯域　　　 中
+給水ポンプ（屋上）　　　 480 Hz　　　 小
+蛍光灯 安定器（廊下）　  100 Hz　　　 小
+変圧器（電柱）　　　　　 120 Hz　　　 小</div>
+<p>七源。分離には十七日かかった。これで LA90 のほぼ全部が説明できる。残差は一デシベル未満で、測定誤差の範囲にある。</p>
+<p>説明できてしまうと、少し困る。二か月かけて分離したのは、説明のつかない残差を見つけるためだった。残差がないということは、この場所では何も起きていないということである。</p>
+<p>もっとも、何も起きていない場所で何かを待つのが定点観測というものである。待っていることを認めると観測でなくなるので、認めない。</p>
+`},
+
+{era:"main", date:"2026-05-06", time:"23:17", title:"聞こえないもののリスト", tags:["不在","方法"], body:`
+<p>目録の逆をつくった。あるべきなのに録れていない音である。方法としては不当である。「あるべき」の根拠が私の記憶しかないからである。それでも作った。</p>
+<div class="measure">1　階下の子どもの声。三月以降なし。転居と思われる。
+2　二階の犬。一月に死んだと管理人から聞いた。
+3　六時台の新聞配達のバイク。契約が減ったのだろう。
+4　向かいの棟の、朝のピアノ。練習曲。四月中旬から止んだ。
+5　隣家の生活音。風鈴だけが鳴る。人の音が一度もない。
+6　自分の声。定点観測の音声メモ以外に、この二か月、自宅で声を出していない。</div>
+<p>このリストを作るのに十七分かかった。項目を六つに絞るのに、その三倍かかった。落とした項目のほうが多い。</p>
+<p>六項目のうち、一から四は外形的な理由で説明がつく。五は説明がつかない。隣家には人が住んでいるはずである。風鈴を出した者がいる以上、住んでいる。しかしベランダに出る音も、窓を開ける音も、一度も録れていない。</p>
+<p>六については、事実の確認だけしておく。妻とは話している。大学でも話している。自宅で、ひとりで声を出していない、というだけのことである。四十三歳の男が家で独り言を言わないのは異常ではない。</p>
+<p>異常ではないが、記録には残る。残ったものを見てから考えると決めたので、見ている。</p>
+<p class="cut">――ここで記述が弛緩した。以下、削除。</p>
+`},
+
+{era:"main", date:"2026-05-13", time:"05:08", title:"水音", tags:["文字起こし","訂正"], body:`
+<div class="measure">定点観測 #070
+2026-05-13　05:20–05:30
+気温 17.0℃／湿度 81%／風 0.9 m/s（南東）
+LAeq 42.1 dB　LAmax 60.3 dB　LA90 37.8 dB</div>
+<p>文字起こし。</p>
+<div class="measure">08:10 ／ 雨樋。昨夜の雨の残り。
+08:17 ／ すずおとが、……水音が、二か所から。
+08:22 ／ 訂正。水音です。</div>
+<p>今回は同型ではない。「みずおと」の語頭 /m/ が /s/ に置き換わっている。鼻音の摩擦音化であり、調音点も調音法も違う。先の二例（/i/ の脱落）とは別系統の誤りである。類例に乏しい。</p>
+<p>説明を試みる。直前の発話に「雨樋（あまどい）」があり、その /a/ と /o/ の配置が干渉した可能性。あるいは、雨樋の音そのものが 3 kHz 帯に強い成分を持っていて、自分の発話の子音知覚に影響した可能性。後者であれば、聴覚フィードバックを介した誤りということになり、記録として面白い。面白いので、そちらを採る。</p>
+<p>採ったが、根拠は薄い。薄いと書いておく。</p>
+<p class="cut">――ここで記述が弛緩した。以下、削除。</p>
+<p>訂正までに五秒。</p>
+`},
+
+{era:"main", date:"2026-05-18", time:"06:17", title:"隣家について", tags:["風鈴","不在"], body:`
+<p>隣家の風鈴は、二か月半のあいだ一度も外されていない。四月の強風の日にも出ていた。あの日の風速は瞬間で十七メートルに達している。ガラスの風鈴を出しておく天候ではない。</p>
+<p>管理人に、五〇三号室について訊いた。訊き方には気をつけた。ベランダの構造上、うちの給水管が隣室を経由しているので、と嘘をついた。嘘をつく必要はなかったのに、口が勝手に言った。</p>
+<p>五〇三号室は、二年前から同じ方が住んでいるという。ひとり暮らし。日中は不在。それ以上は個人情報なので、と言われた。当然である。</p>
+<p>帰りに、外から五階を見上げた。五〇三のベランダには、洗濯物も、植木も、椅子もない。風鈴だけが吊ってある。</p>
+<p class="cut">――ここで記述が弛緩した。以下、削除。</p>
+<p>誰かが出したのだから、誰かがいる。いるのに音がしない部屋がある、というだけの話である。世の中にはそういう部屋がいくらでもある。私は自分の部屋のことを考えないようにした。</p>
+`},
+
+{era:"main", date:"2026-05-22", time:"05:08", title:"差分", tags:["機材","差分","方法"], body:`
+<p>四月に買った二台目を使って、同一条件の同時録音を十七日分とった。二台を三十センチ離して並置、設定は完全に一致させ、時刻同期はクラップで合わせる。十分間、毎朝。</p>
+<p>目的は機材由来の変動の分離である。二台の出力を位相反転して加算すれば、共通成分は打ち消され、機材固有の成分だけが残る。標準的な手続きである。</p>
+<p>結果。残差はノイズフロアだけだった。十七日分すべて。プリアンプの自己雑音がわずかに違うほかは、何も残らなかった。</p>
+<p>当然である。二台が同じものを聴いていれば、差はゼロになる。それが差分という操作の定義である。私は正しい手続きを踏んで、定義どおりの結果を得た。</p>
+<p>ここで問題になるのは、十七日目の朝、残差の波形を拡大しながら、私が何を探していたかということである。機材の特性を見るのであれば、一日分で足りる。三日あれば十分である。十七日続けたのは、機材の話ではない。</p>
+<p>二台が同じものを聴いていれば差はゼロになる、と私は書いた。逆に言えば、差がゼロでなかったなら、それは二台のうち一台だけが聴いたものである。</p>
+<p class="cut">――ここで記述が弛緩した。以下、削除。</p>
+<p>差分の記録は保存してある。機材更新時の参照用として有用である。</p>
+`},
+
+{era:"main", date:"2026-05-26", time:"22:17", title:"演習の発表", tags:["方法"], body:`
+<p>三年生の演習。各自が録音を一点持ち寄って分析する、という、公開講座とほぼ同じ課題を大学でもやっている。</p>
+<p>ひとりが「音のしないもの」を選んできた。防音室の暗騒音である。十七分間、無響に近い条件で録って、そこに何が残るかを見る。残ったのは録音機自身の自己雑音と、本人の心音と、本人の耳鳴りだった。耳鳴りが録れるはずはないので、それは本人の記憶である。発表者もそう言った。</p>
+<p>よくできた発表だった。私は褒めた。褒めながら、褒める速度が速すぎたと思った。ほかの発表には質問をして、この発表にはしなかった。質問をしなかったのは、質問の必要がなかったからではない。</p>
+<p>演習後、その学生が「先生、前に同じことを言ってる人がいたんですか」と訊いてきた。私が「またか」と言ったらしい。言った覚えはない。記録もしていない。</p>
+<p>大学の演習室は録音していない。録音していない場所で自分が何を言ったかは、確かめようがない。私はこれまで、確かめようのないことを気にしたことがなかった。</p>
+`},
+
+{era:"main", date:"2026-05-30", time:"06:08", title:"五月の残り", tags:["定点観測","気象"], body:`
+<div class="measure">定点観測 #087
+2026-05-30　05:20–05:30
+気温 19.4℃／湿度 73%／風 1.5 m/s（南）
+LAeq 43.6 dB　LAmax 64.9 dB　LA90 38.2 dB</div>
+<p>三月からの八十七日分を一枚に並べた。横軸が日付、縦軸が LA90。右上がりである。気温との相関は〇・八一。これは想定どおりで、暖かくなれば窓が開き、人が起き、虫が鳴く。</p>
+<p>相関から外れる日が三日ある。四月二日、五月六日、五月二十二日。いずれも値が想定より低い。つまり、その朝だけ、静かだった。</p>
+<p>三日とも、天候に特記事項はない。気圧も平年並み。祝日でもない。説明がつかない。</p>
+<p>説明のつかない三日を見つけたとき、私は少し嬉しかった。二か月かけて残差を潰してきたのに、残差が出ると嬉しい。研究者としては失格である。残差は誤りの徴候であって、発見の徴候ではない。</p>
+<p>ただ、三日である。三度目、という言い方が頭をよぎった。よぎっただけである。試行数は八十七であり、三日の外れ値は統計的にまったく珍しくない。私は自分にそう言った。声に出して言ったわけではない。</p>
+`},
+
+{era:"main", date:"2026-06-02", time:"05:17", title:"寂しい", tags:["文字起こし","訂正","弛緩"], body:`
+<div class="measure">定点観測 #090
+2026-06-02　05:20–05:30
+気温 17.8℃／湿度 88%／風 0.4 m/s（北東）
+LAeq 40.2 dB　LAmax 59.1 dB　LA90 36.4 dB</div>
+<p>文字起こし。</p>
+<div class="measure">01:25 ／ 六月二日。気温十七・八度。湿度高い。
+01:31 ／ 風がないので、……すずしい、という感じではない。
+01:36 ／ （八秒の無音）
+01:44 ／ 続けます。</div>
+<p>この箇所を、三十回聴いた。</p>
+<p>「すずしい」と言っている。文脈から言えば「さびしい」と言うべきところではない。気温十七・八度、湿度八十八パーセント、風速〇・四。この条件を「涼しい」と述べるのは、むしろ不正確である。六月の朝としては蒸している。</p>
+<p>つまり、言い誤りではない。言い誤りというのは、意図した語と違う語が出ることである。この場合、意図した語がわからない。「涼しい」と言おうとして「涼しい」と言ったのなら、誤りは語ではなく判断のほうにある。</p>
+<p>別表には「語彙的置換」として記録し、正形を「さびしい」とした。なぜそう書いたのか、書いてから考えている。私は「さびしい」という語を、この三か月、一度も使っていない。使っていない語を正形として書いたということは、私はあの八秒の無音の下に、その語を聞いたということである。</p>
+<p>聞いた、という言い方は不正確である。録音には入っていない。</p>
+<p class="cut">――ここで記述が弛緩した。以下、削除。</p>
+<p>訂正はしていない。この日の音声メモに訂正はない。</p>
+`},
+
+{era:"main", date:"2026-06-05", time:"06:08", title:"補遺・訂正について", tags:["訂正","方法"], body:`
+<p>過去の記事を何本か編集した。編集した箇所には印をつけてある。</p>
+<p>編集の方針を書いておく。事実の誤り（測定値、日付、単位）は無条件で直す。表現の稚拙さは直さない。記述が対象から離れている箇所も、原則として直さない。直したくなるが、直すと記録の意味がなくなる。弛緩した箇所こそが、その日の私の状態の記録だからである。</p>
+<p>ただし、四月十六日の記事だけは後半を書き直した。あれは弛緩ではなく、単に間違ったことを書いていた。機材に執着するのは技術者の悪癖だと書いたが、あれは自分を技術者になぞらえることで話を小さくしている。悪癖であるのはそのとおりで、技術者かどうかは関係がない。</p>
+<p>十七本の記事に手を入れて、直したのは結局そこ一か所である。残りは印だけをつけた。印をつけるというのは、ここを読み返したという記録である。何を直したかよりも、どこを何度読み返したかのほうが、たぶん情報量が多い。</p>
+<p>そういう統計は取っていない。取れば出るのだろうが、取らない。</p>
+`},
+
+/* ---------- 第三部　侵食（2026-06 〜 07） ---------- */
+{era:"main", date:"2026-06-09", time:"05:17", title:"梅雨入り", tags:["定点観測","気象"], body:`
+<div class="measure">定点観測 #097
+2026-06-09　05:20–05:30
+気温 20.1℃／湿度 96%／風 0.3 m/s（東）
+LAeq 45.0 dB　LAmax 62.7 dB　LA90 41.3 dB</div>
+<p>梅雨入り。湿度九十六パーセント。この湿度では空気中の高域減衰が小さくなり、遠くの音が近く聞こえる。国道は一・七キロ先にあるが、今朝は八百メートルほどの距離感で届いている。</p>
+<p>これは錯覚ではない。物理的に、そう届いている。湿度が上がると 4 kHz 以上の減衰係数が下がり、遠方音源の高域が保存される。人間は高域の残り方で距離を推定するので、同じ距離の音源が近づいたように知覚される。</p>
+<p>つまり、雨の前には、遠くにあるものが近くに来る。全部が近くに来る。これは気象の話であって、それ以上のことではない。</p>
+<p>ただ、毎年この季節になると人が不安定になるという臨床的な話を、私はこれまで気圧と日照でしか説明してこなかった。音の距離感が変わるという要因を勘定に入れていなかった。自分の周りが急に近くなれば、誰でも落ち着かない。</p>
+<p>風鈴は今朝も鳴っている。湿度のせいで、いつもより近い。五時三十分までに十七回鳴った。三月九日と同じ数である。</p>
+`},
+
+{era:"main", date:"2026-06-14", time:"22:08", title:"一年前の記録", tags:["講座","反復"], body:`
+<p>昨年度の事業報告の控えを整理していて、公開講座の録音が全回分残っていることに気づいた。実習室の据置マイクで録ったもので、私の声も入っている。</p>
+<p>第八回だけ聴いた。講評の回である。</p>
+<p>自分の声を一年後に聴くのは、文字起こしを始めてからは珍しいことではない。ただ、この録音は定点観測ではなく、人に向かって話している声である。話速が速い。半音ほど高い。語尾が上がる。教室で話すときの私は、別人ではないにせよ、少なくとも別の設定になっている。</p>
+<p>講評の配分について。受講生は十七名だった。全体八十二分のうち、一名分に二十八分を使っている。三分の一を超えている。残りを十六名で分けている。これは公平を欠いた運営であり、反省として報告書に書くべきだった。</p>
+<p>書くべきだった、と思って控えを確認したら、書いてあった。「最終回においては、一名の作品に対する講評が全体の三分の一以上を占めた。他の受講生に対して公平を欠いたと考える」とある。</p>
+<p>私の字である。私の文体である。しかし書いた記憶がない。報告書は八月の末に事務へ出しているので、書いたのは八月のどこかである。</p>
+<p>去年の八月に何をしていたか、私は思い出せない。窓を開けていないことは、風鈴の件で確かめた。報告書を書いたことも、書類のほうが覚えている。私だけが覚えていない。</p>
+<p class="cut">――ここで記述が弛緩した。以下、削除。</p>
+<p>疲労である。あの時期は科研の報告と重なっていた。そういうことはある。</p>
+`},
+
+{era:"main", date:"2026-06-19", time:"05:17", title:"七月について", tags:["方法","先取り"], body:`
+<div class="measure">定点観測 #107
+2026-06-19　05:20–05:30
+気温 22.3℃／湿度 89%／風 1.0 m/s（南南東）
+LAeq 46.8 dB　LAmax 65.4 dB　LA90 42.0 dB</div>
+<p>記録の計画を立て直している。</p>
+<p>三月に始めたときは一年続けるつもりだった。今もそのつもりである。ただ、七月と八月の扱いを決めていなかった。夏は音の情報量が多すぎる。蝉、雷、エアコン、花火、窓を開けた生活音。LA90 は上がり、定常音の目録は役に立たなくなる。差分は取れない。夏の記録は、方法としては最も弱い。</p>
+<p>七月と八月で六十二日。そのうち記録に値する日は、経験上、十七日あるかないかである。弱い期間を飛ばすという選択はある。九月から再開すればよい。データの連続性は失われるが、季節変動を扱わないのであれば実害はない。</p>
+<p>と、ここまで書いて、自分がいま、七月と八月を飛ばす理由を探していることに気づいた。方法上の理由は本当に存在する。存在するが、私は理由のほうから来たのではない。</p>
+<p>飛ばさない。八月三十一日まで毎朝録る。決めた以上は書いておく。書いておけば、あとで言い訳ができなくなる。</p>
+<p>この記事は自分宛てである。読む人には申し訳ない。</p>
+`},
+
+{era:"main", date:"2026-06-24", time:"06:08", title:"三度目", tags:["三度目","反復","自販機"], body:`
+<p>自動販売機の前で、同じ男に三度会った。</p>
+<p>一度目は五月の末、深夜。二度目は六月十日の明け方。三度目が昨夜である。いずれも私が録音機を持って立っているところへ、向こうが飲み物を買いに来た。会釈をした。向こうもした。それだけである。</p>
+<p>同じ集合住宅の住人であれば、三度会うのは珍しくない。百戸ある建物で、自動販売機は一台しかない。確率的にはむしろ少ない。</p>
+<p>それでも、三度目に会ったとき、私は反射的に「またか」と思った。声には出していない。出していないことを、その場で確認した。最近、自分が声に出したかどうかを確認する癖がついている。</p>
+<p>三度目は意味である、という考え方が、なぜ人間にとってこれほど強固なのか。数学的な根拠は何もない。ひとつ思いつくのは、三点あれば方向が決まるということである。二点では直線しか引けず、その直線がどちらへ向かっているかは決まらない。三点目が来て初めて、曲がっているか、まっすぐか、どちらへ加速しているかが出る。</p>
+<p>つまり三度目というのは、意味の発生ではなく、外挿の開始である。三度目が来た瞬間に、人間は四度目を予測し始める。予測を始めてしまえば、もう待っている。</p>
+<p>私は現在、十七の分類項目のうち「三度目」というタグを、これで四回使っている。</p>
+`},
+
+{era:"main", date:"2026-06-28", time:"05:17", title:"虫", tags:["文字起こし","先取り","鈴虫"], body:`
+<div class="measure">定点観測 #116
+2026-06-28　05:20–05:30
+気温 23.7℃／湿度 91%／風 0.6 m/s（南）
+LAeq 47.2 dB　LAmax 66.1 dB　LA90 43.5 dB</div>
+<p>文字起こし。</p>
+<div class="measure">04:49 ／ 植え込みのほう、何か。
+04:55 ／ すずむしが、……虫が、一匹。
+05:02 ／ 訂正。虫です。鈴虫ではありません。六月です。</div>
+<p>六月下旬に鈴虫は鳴かない。成虫が出るのは八月に入ってからで、地域差を見込んでも七月下旬が限界である。私はそれを知っている。専門ではないが、季節指標としては基本的な知識である。</p>
+<p>にもかかわらず、鳴いた虫の種を特定する前に、語のほうが先に出た。別表には「語頭の付加／先取り」として記録した。</p>
+<p>「先取り」という分類は、四月に自分で立てたものである。季節や時刻に先んじて現れた音のための項目で、これまで一度も使っていなかった。使う機会がなかったのではない。使う機会を想定して立てた項目ではなかった。なぜ立てたのか、立てたときには理由があったはずである。</p>
+<p>別表はこれで六件目になった。三月からの十七週で六件。頻度としては多くない。</p>
+<p>録音を聴き直した。鳴いていたのはクビキリギスである。鈴虫ではない。音色も発音機構も違う。間違えようがない。</p>
+<p>訂正までに七秒。</p>
+`},
+
+{era:"main", date:"2026-07-03", time:"06:08", title:"貸出記録", tags:["機材","講座","事務"], body:`
+<p>事務から連絡があった。昨年度の公開講座で貸し出した録音機のうち、一台が未返却になっているという。備品台帳の年度末照合で出てきた。</p>
+<p>貸出は全部で六台。五台は夏季休業明けに事務室で受け取っている。一台だけ記録がない。受講生ID W-09。</p>
+<p>報告書の備考欄に、私自身が「機材貸出（本人希望により継続）」と書いている。継続の期限を書いていない。書式上は私の記入漏れであり、台帳としては不備である。</p>
+<p>事務の担当者は事務的だった。当然である。備品の話をしているのだから、事務的でよい。「ご本人に督促の連絡をしていただけますか」と言われた。「こちらで処理します」と答えた。</p>
+<p>答えてから、なぜそう答えたのかを考えた。督促の連絡は事務がするのが筋である。教員が個別に受講生へ連絡を取るのは、むしろ手続きとして望ましくない。私は望ましくないほうを、質問される前に引き受けた。</p>
+<p>機種は、四月に私がもう一台買ったものと同じである。十七年前から続いている型番の、最後の世代にあたる。</p>
+`},
+
+{era:"main", date:"2026-07-07", time:"05:17", title:"未返却", tags:["機材","事務","不在"], body:`
+<p>処理した。</p>
+<p>備品台帳からの除却手続きをとった。分類は「紛失」。貸出責任者である私の監督不行き届きとして、始末書を一枚提出した。十七行だった。様式が決まっているので、書くことはほとんどない。日付、備品番号、経緯、再発防止策。</p>
+<p>再発防止策の欄に、「貸出期限を必ず記入する」と書いた。正しい再発防止策である。</p>
+<p>先方の連絡先は、もう有効ではない。それも書式のどこかには書いたはずだが、どの欄に書いたか覚えていない。</p>
+<p>これで昨年度の事業に関する事務は全部終わった。報告書も、会計も、備品も。一年近くかかったが、終わるものは終わる。</p>
+<p class="cut">――ここで記述が弛緩した。以下、削除。</p>
+<p>今朝の定点観測は休んだ。六月十九日に八月三十一日まで毎朝録ると書いたので、これは違反である。記録しておく。開始からの百二十五日で、欠測は今日が最初である。</p>
+`},
+
+{era:"main", date:"2026-07-11", time:"23:08", title:"夜の録音について", tags:["方法","バス"], body:`
+<p>定点観測は朝と決めているが、夜に録ることが増えた。決めた枠の外である。</p>
+<p>夜の音は朝の音と性質が違う。朝は音が増えていく方向にあり、夜は減っていく方向にある。同じ四十デシベルでも、これから上がる四十と、これから下がる四十は、聞こえ方が違う。装置には区別がつかない。人間にはつく。</p>
+<p>この「方向の知覚」は、記録からは失われる。録音を切り出して聴かせれば、誰にも朝夕の区別はつかない。つまり、録音という手続きは、時間の向きを消す。</p>
+<p>音は時間のなかでしか存在しないのに、その記録は時間の向きを持たない。これは録音技術の根本的な欠陥である。あるいは、根本的な機能である。どちらとも言える。</p>
+<p>二十三時四十八分、十七系統の最終便。反射音のほうが大きく聞こえるのは、四か月前と変わらない。</p>
+<p>変わらないことを確認するために、私はもう百回以上これを聴いている。変わらないものを百回確認する作業に名前をつけるとすれば、それは研究ではない。祈りに近いが、祈りには宛先がある。私の場合、宛先の欄が空白のまま、同じ封筒を毎晩出している。</p>
+<p class="cut">――ここで記述が弛緩した。以下、削除。</p>
+`},
+
+{era:"main", date:"2026-07-15", time:"05:17", title:"静けさ", tags:["文字起こし","訂正"], body:`
+<div class="measure">定点観測 #132
+2026-07-15　05:20–05:30
+気温 26.8℃／湿度 79%／風 1.4 m/s（南西）
+LAeq 49.1 dB　LAmax 68.3 dB　LA90 44.7 dB</div>
+<p>文字起こし。</p>
+<div class="measure">08:55 ／ 風が止んだ。
+09:02 ／ すずけさが、……静けさが、戻ります。
+09:08 ／ 訂正。静けさ。</div>
+<p>「しずけさ」の /ʃi/ が /su/ に交替している。昨年七月の「せいおん→すずおん」と同方向の誤りであり、摩擦音の交替として類型化できる。一年の間隔をおいた再発である。</p>
+<p>別表に記入しながら、九件のうち七件が同じ二音で始まっていることに気づいた。気づいたが、これは日本語の音韻構造から考えて特別なことではない。サ行は使用頻度が高く、誤りが集中するのは統計的に自然である。日本語話者の言い誤りデータベースでも、サ行の交替は最も多い類型のひとつに入る。手元の資料では、収録された千件あまりのうち十七パーセントがサ行である。</p>
+<p>統計的に自然である、と書いた。しかし私は自分の九件しか持っていない。標本数九で「自然である」と判断するのは、自分の学生がやったら赤を入れる。</p>
+<p>赤を入れるが、直させはしない。直しようがないからである。標本を増やすしかない。増やすためには、続けるしかない。</p>
+<p>訂正までに六秒。平均は五・六秒になった。</p>
+`},
+
+{era:"main", date:"2026-07-18", time:"06:08", title:"初鳴き", tags:["蝉","気象","定点観測"], body:`
+<div class="measure">定点観測 #135
+2026-07-18　05:20–05:30
+気温 27.4℃／湿度 76%／風 0.8 m/s（南）
+LAeq 51.0 dB　LAmax 71.2 dB　LA90 46.3 dB</div>
+<p>ニイニイゼミの初鳴き。五時三十四分、記録上は観測時間外である。観測を終えて機材を片付けているときに鳴いた。</p>
+<p>去年の初鳴きは七月十七日である。市の環境課が毎年記録していて、公開されている。一日違い。ほとんど同じと言ってよい。</p>
+<p>去年の七月十七日に私が何をしていたかは、記録がある。講座の第七回と第八回のあいだで、受講生の提出音源を整理していた。ファイル名の規則を出したのがその少し前である。あの週のことは、記録があるのでよく覚えている。</p>
+<p>記録があるのでよく覚えている、という言い方に、自分で引っかかった。記録がある期間のことは覚えていて、記録がない期間のことは覚えていない。それは記憶ではなく、参照である。</p>
+<p>八月には記録がない。だから八月のことは覚えていない。単純な話である。</p>
+<p>今年の八月は記録を取る。取ると六月に書いた。</p>
+`},
+
+{era:"main", date:"2026-07-20", time:"05:17", title:"来週", tags:["先取り","方法"], body:`
+<p>来週の予定表を見た。二十七日は月曜で、会議が一件、午後に入っている。それ以外は空いている。</p>
+<p>夏季休業の直前としては珍しいことではない。授業は前週で終わっている。採点は八月に入ってからでよい。空いているのが正常である。</p>
+<p>正常であることを、わざわざ書いている。わざわざ書いていることを、わざわざ書いている。</p>
+<p>これ以上書くと、書いていることの内容ではなく、書き方のほうだけが残る。残るのは構わないが、残ったものを読み返すのは自分である。読み返したときに、その日の自分が何を回避していたかは、書き方から全部わかる。私は文字起こしを四か月続けているので、そういう読み方が身についてしまった。</p>
+<p>今朝の観測値は平常。蝉、十七匹以上。数えられる密度を超えた。</p>
+<p class="cut">――ここで記述が弛緩した。以下、削除。</p>
+`},
+
+/* ---------- 第四部　八月（2026-07 〜 08） ---------- */
+{era:"main", date:"2026-07-24", time:"06:08", title:"予定の変更", tags:["方法","機材"], body:`
+<p>二台同時録音を中止した。</p>
+<p>理由は方法上のものである。五月の十七日分で機材特性の分離は済んでおり、これ以上続けても新しい情報は出ない。データ量が倍になるだけで、保管と整理の手間が増える。合理的な判断である。</p>
+<p>二台目は箱に戻して押入れに入れた。緩衝材も元のまま取ってあったので、買ったときの状態に戻った。型番のシールも剥がしていない。</p>
+<p>押入れに入れてから、これでは壊れないな、と思った。壊れないように買ったのだから、目的は達成されている。使わなければ壊れない。使わないものは、壊れる可能性を持たないという意味で、すでに使えない。</p>
+<p>この種の言い方を私は最近よくする。対句の形にすると何かを言った気になる。何も言っていない。修辞は、言うことがないときに文が自分で伸びる仕組みである。</p>
+<p>今朝の観測値は平常。蝉、密。LAeq 52.4 dB。開始から百四十二日。</p>
+`},
+
+{era:"main", date:"2026-07-27", time:"17:17", title:"マイクロフォンの指向性について", tags:["方法","機材"], body:`
+<p>定点観測に使っている機材の内蔵マイクは、XY方式のステレオペアである。単一指向性のカプセルを二本、九十度で交差させてある。この配置の性質を整理しておく。</p>
+<p>単一指向性（カージオイド）の感度は、正面を 0 dB として、角度 θ に対して (1 + cos θ) / 2 で与えられる。九十度で −6 dB、百八十度で理論上は無限小、実際には −20 dB 前後まで落ちる。この「実際には落ちきらない」という点が重要で、背面からの音は消えるのではなく、周波数によって漏れ方が違う形で残る。低域ほど漏れる。カプセルの寸法が波長に対して十分に小さいとき、指向性そのものが成立しなくなるからである。</p>
+<p>したがって、XY方式で録った音の背後にあるものは、低域だけが残った姿で記録されている。高域は落ち、輪郭を失い、質感だけが残る。人はその成分を「気配」と呼ぶことがあるが、これは正面の音の欠落を背面の音で補完する聴覚の働きであって、記録された信号の性質ではない。</p>
+<p>時間差について。XY方式は両カプセルの音響中心をほぼ一致させるため、チャンネル間に時間差が生じない。レベル差だけで方位が決まる。これはモノラル互換性に優れる一方、定位が中央に寄る。AB方式のように時間差で定位させた録音と比べると、XY方式の音像は「奥行きが浅い」と評される。</p>
+<p>奥行きが浅い、というのは主観的な記述である。物理的に言えば、初期反射の到来時間差が両チャンネルで同一になるため、空間の大きさを推定する手がかりが減る、ということである。手がかりが減ると、人間は空間を実際より小さく見積もる。</p>
+<p>定点観測でXY方式を使っているのは、四か月間の記録で定位条件を一定に保つためである。方式を途中で変えれば比較ができなくなる。奥行きが浅いことは承知のうえで採用している。</p>
+<p>なお、内蔵マイクのカプセル間隔は十七ミリである。この寸法では、10 kHz 以上でカプセル間の音響的干渉がわずかに生じる。実測ではフラットから ±0.8 dB の範囲に収まっており、実用上は無視してよい。</p>
+<p>以上。今日は以上である。</p>
+`},
+
+{era:"main", date:"2026-08-05", time:"05:17", title:"済んで", tags:["文字起こし","訂正"], body:`
+<div class="measure">定点観測 #152
+2026-08-05　05:20–05:30
+気温 28.9℃／湿度 72%／風 1.7 m/s（南南西）
+LAeq 54.3 dB　LAmax 73.8 dB　LA90 48.1 dB</div>
+<p>文字起こし。</p>
+<div class="measure">00:38 ／ 八月五日、五時二十分。
+00:44 ／ 上の階の工事は、先週で、すずんで、……済んで、ます。
+00:49 ／ 訂正。済んでいます。</div>
+<p>上の階の工事は十七日間続いた。終わったのは事実である。</p>
+<p>「すんで」に一音節が挿入されて「すずんで」になっている。挿入である。脱落や交替ではない。これまでの八件はすべて既存の音を別の音に置き換えるものだったが、今回は存在しない音が足されている。</p>
+<p>別表には「音節の挿入／暑熱による」と書いた。暑熱による、というのは説明ではない。説明のつかないものを説明のつく場所に置いただけである。学生の論文であれば、ここに赤を入れる。</p>
+<p>挿入は、脱落よりも重い。脱落は急いだときに起きる。挿入は急いでも起きない。余分な音を出すには、余分な時間がいる。つまり私は、あの箇所で、通常より長い時間をかけて、余分なものを足した。</p>
+<p>足したものが何であるかは、書かない。書けば別表の類型欄が埋まってしまう。埋めてはならない。類型が確定すると、九件が一つの系列になる。一つの系列になったものは、もう癖ではない。</p>
+<p class="cut">――ここで記述が弛緩した。以下、削除。</p>
+<p>訂正までに五秒。</p>
+`},
+
+{era:"main", date:"2026-08-10", time:"05:17", title:"窓", tags:["定点観測","気象","不在"], body:`
+<div class="measure">定点観測 #157
+2026-08-10　05:20–05:30
+気温 29.6℃／湿度 70%／風 0.5 m/s（西）
+LAeq 55.0 dB　LAmax 75.2 dB　LA90 49.4 dB</div>
+<p>窓を開けた。</p>
+<p>観測はベランダで行うので、窓の開閉は測定条件に影響しない。ベランダに出るために開ける一分間を除いて、この二年、八月に窓を開けたことがない。エアコンの効率という理由を私は使ってきた。実際に効率は落ちる。理由としては成立する。</p>
+<p>成立する理由をわざわざ用意している、という事実のほうが、いま私には重い。</p>
+<p>開けたまま、一時間いた。記録はしていない。定点観測は十分間と決めているので、それ以外は記録しない。記録しないと決めた時間に何が起きたかは、したがって、どこにも残らない。</p>
+<p>残らないことを、いま書いている。書いているので残る。この矛盾は方法の問題ではなく、私が何を残したがっているかの問題である。</p>
+<p>風鈴は鳴らなかった。風速〇・五では鳴らない。短冊も動かない。</p>
+<p>五〇三号室の窓は閉まっている。十七週間、ずっと閉まっている。数えたわけではない。三月九日から数えれば、そうなるというだけである。</p>
+`},
+
+{era:"main", date:"2026-08-14", time:"23:17", title:"お盆", tags:["定点観測","不在"], body:`
+<p>集合住宅が空になる季節である。今朝の LA90 は 41.2 dB。三月以降の最低値を更新した。八月に最低値が出るのは、季節変動だけを見ていれば異常である。人がいないからである。</p>
+<p>去年の八月も静かだったはずである。当然そうなる。毎年そうなっている。ただ、私はそれを値として持っていない。去年の八月は記録がない。</p>
+<p>記録がない期間について「はずである」と書くのは、推定であって観測ではない。推定を観測と同じ欄に書いてはいけない。これは初学者に最初に言うことである。私はそれを自分のブログで十回以上やっている。</p>
+<p>妻が実家へ行った。二泊。誘われたが、原稿があると言って断った。原稿はある。八月末が締切である。嘘ではない。</p>
+<p>嘘ではないことを確認してから断った、という順序が、たぶん問題なのだと思う。断る理由を探してから断ったのではなく、断ると決めてから理由を確認した。順序は本人にしかわからない。本人にはわかる。</p>
+<p class="cut">――ここで記述が弛緩した。以下、削除。</p>
+<p>二泊のあいだ、家には私しかいない。十七日に帰ってくる。</p>
+`},
+
+{era:"main", date:"2026-08-16", time:"05:17", title:"数について", tags:["三度目","反復","方法"], body:`
+<div class="measure">定点観測 #163
+2026-08-16　05:20–05:30
+気温 30.1℃／湿度 68%／風 0.7 m/s（南西）
+LAeq 55.8 dB　LAmax 76.0 dB　LA90 41.9 dB</div>
+<p>ひとつ、整理しておかなければならないことがある。</p>
+<p>この記録には、十七という数がよく出る。自分で気づいていた。気づいていながら書かなかったのは、書けば意味が発生してしまうからである。しかしこのまま書かずに続けると、書かなかったこと自体が意味になる。どちらにしても逃げられないので、整理する。</p>
+<p>これまでに出た十七を列挙する。</p>
+<div class="measure">・公開講座の第一回出席者　十七名
+・ベランダの手すりの縦桟　十七本
+・一階から二階までの段数　十七段
+・自動販売機の起動間隔の中央値　十七分
+・路線バス　十七系統
+・この市に住んで　十七年
+・分類項目　十七
+・同時録音を行った日数　十七日
+・始末書の行数　十七行
+・内蔵マイクのカプセル間隔　十七ミリ
+・去年のニイニイゼミの初鳴き　七月十七日</div>
+<p>十一件。ほかにもあるだろうが、拾えたのはこれだけである。</p>
+<p>説明は簡単である。これは頻度錯覚と呼ばれる現象で、一度意識した対象がその後過剰に目につくようになる、というだけのことである。心理学の入門書に必ず載っている。十七という数は、一から百のあいだの任意の数と同じ頻度で世界に出現している。私が十七だけを拾い、十六と十八を拾っていないだけである。</p>
+<p>検証もできる。上の十一件のうち、いくつは丸めた結果である。自動販売機の中央値は十六・八分を四捨五入した。桟の数は端の支柱を数えるかどうかで十八にもなる。始末書の行数は署名欄を含むかどうかで変わる。つまり、私は十七になるように数えている。</p>
+<p>自分で数え方を選んでおいて、出た数に驚いている。これを研究と呼ぶことはできない。整理は以上である。</p>
+<p>ひとつだけ、数え方を選べないものがある。</p>
+<p>いや、それも説明はつく。<del>あれは私が決めた日付ではない</del></p>
+<p>今朝の観測値は平常。明日も同じ時刻に録る。</p>
+<p class="editnote">この記事は 2026-08-16 に編集されました。</p>
+`},
+
+{era:"main", date:"2026-08-18", time:"05:17", title:"欠測", tags:["定点観測","不在"], body:`
+<p>昨日の観測を欠いた。</p>
+<p>理由は機材の不調である。記録開始から百六十四日で、欠測は二度目にあたる。一度目は七月七日。</p>
+<p>欠測の扱いについて。時系列データにおける欠測は、補間するか、欠測として残すかのいずれかである。補間は前後の値から推定して埋める方法で、季節変動の解析には有効だが、その日に何が起きたかという問いには答えられない。私は残すほうを採る。四か月前からそう決めている。</p>
+<p>したがって八月十七日の欄は空欄になる。空欄は、値がないということであって、ゼロではない。ゼロは測定された静けさであり、空欄は測定されなかった時間である。混同してはならない。</p>
+<p>今朝の観測は平常に行った。</p>
+<div class="measure">定点観測 #165
+2026-08-18　05:20–05:30
+気温 29.8℃／湿度 71%／風 1.1 m/s（南）
+LAeq 55.1 dB　LAmax 74.6 dB　LA90 48.7 dB</div>
+<p>以上。</p>
+`},
+
+{era:"main", date:"2026-08-24", time:"03:17", title:"追記", tags:["訂正","講座","方法"], body:`
+<p>昨年度の事業報告の控えに追記をした。</p>
+<p>内容は事務的なものである。報告書の作成にあたって参照した録音――第八回、講評の回――の文字起こしに、話者である私自身の発話の誤りが複数含まれていた。今年に入ってからの自己録音で同種の誤りを記録していたので、あわせて別表にまとめ、報告書から参照できるようにした。</p>
+<p>控えは学内様式であって、公開するものではない。それでも追記の事実は残しておく。文書を後から書き換えたのに、書き換えた記録を残さないのは、最も避けるべきことである。日付と時刻を入れた。</p>
+<p>三時十七分である。原稿が進まないので控えを開き、開いたついでに追記した。ついでに、と書いたが、原稿のファイルを閉じてから控えを開いている。ついでではない。</p>
+<p>一年前の自分の声を、この二か月で何度聴いたか。数えていない。数えられる回数ではない。サーバの生ログには残っているはずだが、見ない。見れば数になる。数になったものは列挙できてしまう。</p>
+<p class="cut">――ここで記述が弛緩した。以下、削除。</p>
+<p>別表は九件で止まっている。九件目は九月に入るまで出ないだろう。出ないほうがよい。</p>
+`},
+
+{era:"main", date:"2026-08-28", time:"05:17", title:"八月の総括", tags:["定点観測","気象","方法"], body:`
+<div class="measure">2026年8月　集計
+観測日数 30／31（欠測 8/17）
+LAeq 平均 54.6 dB（最大 8/21 57.2／最小 8/14 51.0）
+LA90 平均 46.8 dB（最小 8/14 41.2）
+気温 平均 29.4℃　湿度 平均 70%
+蝉 初鳴 7/18　最大密度 8/6 前後　減衰開始 8/23</div>
+<p>六月に「八月は方法として最も弱い」と書いた。そのとおりだった。夏の音は情報量が多すぎて、差分が取れない。三十日分を並べても、分離できたのは気温との相関だけである。</p>
+<p>ただ、弱いと分かっていた期間を通して取ったことには意味がある。弱い期間のデータは、強い期間のデータの意味を決める。八月に何も出なかったという事実が、九月以降に何かが出たときの基準になる。</p>
+<p>そう書くと、私はまだ何かが出るのを待っていることになる。四月から同じことを書いている。待っていることを認めると観測でなくなるので認めない、と五月一日に書いた。認めないと書くことは、認めることである。この程度のことは自分でもわかる。</p>
+<p>八月が終わる。十七日の空欄はそのままにしておく。</p>
+<p>蝉が減り始めた。二十三日から明らかに減っている。減った分だけ、別のものが聞こえるようになる。八月の終わりというのは、音が減る季節ではなく、音が入れ替わる季節である。入れ替わりの途中には、必ず数日、どちらも少ない時期がある。</p>
+<p>その数日が、一年でいちばん静かである。</p>
+`},
+
+/* ---------- 第五部　残響（2026-09） ---------- */
+{era:"main", date:"2026-09-01", time:"05:17", title:"入れ替わり", tags:["定点観測","気象","蝉"], body:`
+<div class="measure">定点観測 #179
+2026-09-01　05:20–05:30
+気温 25.2℃／湿度 74%／風 1.0 m/s（北東）
+LAeq 47.9 dB　LAmax 66.5 dB　LA90 42.3 dB</div>
+<p>八月二十八日に書いた「どちらも少ない数日」は、今年は八月二十九日から三十一日までの三日間だった。三日とも LA90 が 40 dB 台前半で、これは五月の値に近い。九月一日の今朝、すでに上がり始めている。入れ替わりは終わった。</p>
+<p>入れ替わったのは、蝉と、それ以外の虫である。それ以外の虫、というのは正確を欠く書き方だが、まだ同定ができていない。エンマコオロギ、ツヅレサセコオロギ、あとは判別できない数種。</p>
+<p>鈴虫はまだ鳴いていない。この地域では例年、九月の中旬に入ってからである。</p>
+<p>妻が帰ってきた。原稿は進まなかったと言った。進まなかったのは本当である。八月の三十日間、私は毎朝十分間の記録を取り、その集計を書き、そのほかには何もしていない。締切は延ばしてもらった。理由は体調と書いた。</p>
+<p>体調が悪いわけではない。十七日に一度、観測を欠いただけである。</p>
+`},
+
+{era:"main", date:"2026-09-08", time:"05:17", title:"その", tags:["文字起こし","訂正"], body:`
+<div class="measure">定点観測 #186
+2026-09-08　05:20–05:30
+気温 22.6℃／湿度 79%／風 0.9 m/s（東北東）
+LAeq 45.1 dB　LAmax 63.0 dB　LA90 40.8 dB</div>
+<p>文字起こし。</p>
+<div class="measure">07:06 ／ 植え込みの奥で、一匹だけ、他と違うのが鳴いてます。
+07:13 ／ すずの、……その、音は、四キロ台に集中して、
+07:19 ／ （無音、十七秒）
+07:36 ／ 以上です。</div>
+<p>「その」を「すずの」と言っている。</p>
+<p>別表に記入した。類型の欄を空けた。所見の欄には「該当なし」と書いた。</p>
+<p>これまでの八件には、すべて説明を書いてきた。調音上の同化、母音の脱落、鼻音の摩擦音化、文脈からの干渉、暑熱。どれも音声学的に成立する説明である。私は自分の学生に、説明のつかない現象を無理に説明するなと教えている。同時に、説明を試みずに「不明」と書くのは怠慢だとも教えている。この二つは両立する。試みたうえで不明と書く場合にだけ両立する。</p>
+<p>試みた。「その」は指示詞である。直前に名詞句があり、それを受けている。先行文脈に該当する音は含まれていない。「すず」に近い音も、サ行の連続も、ない。母音環境も違う。調音上の説明が立たない。語彙的置換とするには、置換先の語が何であるかを特定できない。</p>
+<p>特定できない、と書いた。特定していない、ではない。</p>
+<p>訂正はしていない。この日の音声メモに訂正はない。そのあと十七秒黙って、「以上です」と言って録音を止めている。</p>
+<p>九件目である。九月に入るまで出ないだろう、と八月二十四日に書いた。出ないほうがよい、とも書いた。書いたとおりの日程で出た。</p>
+`},
+
+{era:"main", date:"2026-09-13", time:"22:17", title:"寝言", tags:["不在","訂正"], body:`
+<p>妻に言われた。</p>
+<div class="q"><p>あなた、ときどき寝言で知らない名前を呼んでるよ。</p></div>
+<p>笑って言われた。責める調子ではない。夫婦のあいだで、この種のことは冗談として処理される。処理されるべきである。</p>
+<p>私は反射的に、何と言っていたかと訊いた。訊いてから、訊くべきではなかったと思った。心当たりのない人間は、その質問をしない。心当たりのない人間は「そんなわけがない」と言う。私は情報を求めた。求めるということは、照合する先を持っているということである。</p>
+<p>妻は、聞き取れない、と言った。</p>
+<div class="q"><p>二音か三音。サ行が入ってる感じ。</p></div>
+<p>音声学者と二十年暮らすと、そういう記述の仕方になる。私が仕込んだ記述の仕方である。妻は自分が何を渡したかを知らない。</p>
+<p>サ行が入っている、という情報は、音声学的にはほとんど何も言っていない。現代日本語のモーラ頻度において、サ行は上位に属する。二音ないし三音の語にサ行が含まれる確率は三割を超える。有意な情報ではない。</p>
+<p>有意ではない、と私はその場で計算した。計算しているあいだ、妻の顔を見なかった。</p>
+<p>寝言は録音していない。私はこの半年、自分の生活のほとんどを録音している。ベランダ、階段、自動販売機、バス、雨、虫。定点観測が百九十回、そのほかが十七系統の最終便だけで百回を超える。睡眠中は録っていない。</p>
+<p>録らない理由を、これまで一度も考えたことがなかった。</p>
+`},
+
+{era:"main", date:"2026-09-15", time:"05:17", title:"鈴虫", tags:["定点観測","鈴虫","先取り"], body:`
+<div class="measure">定点観測 #193
+2026-09-15　05:20–05:30
+気温 20.4℃／湿度 82%／風 0.7 m/s（北）
+LAeq 43.8 dB　LAmax 61.7 dB　LA90 39.2 dB</div>
+<p>鈴虫が鳴き始めた。</p>
+<p>六月二十八日の音声メモで、私はクビキリギスを指して「すずむし」と言っている。別表の六件目である。そのときは季節が二か月早く、あれは先取りだと書いた。</p>
+<p>今朝のは本物である。四・二キロヘルツから四・五キロヘルツに集中した純音的な成分。パルス列の周期は約四・五ミリ秒。温度が下がると周期が延びる。十七度を下回ると鳴かなくなる。</p>
+<p>鈴虫の発音機構について。左右の前翅を擦り合わせる。右の翅の裏に</p>
+<p class="editnote">この記事は下書きの状態で公開されました。（自動保存 05:17）</p>
+`},
+
+{era:"main", date:"2026-09-17", time:"04:17", title:"定義の不足について", tags:["方法","残響","弛緩"], body:`
+<p>四時十七分。観測まであと一時間ある。</p>
+<p>眠れないときはサーバの整理をする。使っていない領域を消していく作業で、頭を使わなくてよい。今夜は昨年度の配布領域を開いた。消すつもりだった。講座はもう開講しない。来年度も開講しない。領域を残しておく理由はない。</p>
+<p>ファイル一覧を上から順に見て、消さずに閉じた。理由は書かない。書かないと書けば、理由があることを書いたことになる。それは承知している。</p>
+<p>三月にこの記録を始めたとき、私は <em>afterlife</em> という語を残響の意味で使うと書いた。物理的に鳴り終わった音が、聴き手の側でなお持続している時間のこと。測れない。測れないものに名前をつけるのは行儀が悪い、とも書いた。</p>
+<p>半年やってみて、定義が不足していたことがわかった。</p>
+<p>残響には二つの場合がある。ひとつは、音が実際に鳴って、その後に残る場合。もうひとつは、音が鳴らなかったのに、鳴り終わったあとのような状態だけが残る場合である。後者を残響と呼ぶのは用語として誤りである。何も鳴っていないのだから、残るものはない。</p>
+<p>しかし聴き手の側から見れば、この二つは区別できない。耳に届いているのは、どちらも「鳴り終わったあと」だけだからである。前者と後者を区別するには、鳴った瞬間を知っていなければならない。</p>
+<p>私は、自分が何かを聴いたのか、それとも聴かなかったことの形だけを聴いているのか、半年かけてわからなくなった。装置には差が出ない。二台並べても差分はゼロになる。五月に確かめた。</p>
+<p>もうひとつ書いておく。</p>
+<p>測れないものに名前をつけるのは行儀が悪い、と私は書いた。測れないものを測れるふりをするからである。では、測れないものに名前をつけずにいれば、行儀はよいのか。</p>
+<p>名前をつけなければ、それは記録に残らない。記録に残らないものは、なかったことになる。記録がない期間のことは覚えていない、と私は七月に書いた。</p>
+<p>なかったことにするために、名前をつけずにおく。それを私は行儀と呼んできた。</p>
+<p>十七の件は、八月十六日に整理して終わりにした。整理そのものは正しかったと思う。頻度錯覚である。十七になるように数えているのは私である。</p>
+<p>数えているのが私であるなら、なぜ十七を選んだのかは、私の側の問題である。世界の側の問題ではない。半年かけて、私はようやく問いを自分の側に移した。移しただけである。</p>
+<p class="cut">――ここで記述が弛緩した。以下、削除。</p>
+<p>五時二十分になったら、いつもどおり録る。</p>
+<p>風鈴はまだ出ている。</p>
+`},
+
+/* ---------- 旧ブログ期（2025） ---------- */
+{era:"old", date:"2025-05-10", time:"14:34", title:"公開講座のお知らせ／まちの音を聴く", tags:["講座","告知"], body:`
+<p>本学人文学部と県内高校との連携事業として、公開講座「まちの音を聴く」を開講する。対象は高校一年から三年、定員二十名、全八回。隔週土曜の午後、実習室を使う。</p>
+<p>音を「聴く」とはどういうことかを、録音という手続きを通して考える。受講生には各自、携帯可能な録音機を用いて自分の生活圏の音を記録してもらい、毎回一点を持ち寄ってもらう。機材を持たない者には貸出を行う。台数に限りがあるので、初回に申し出ること。</p>
+<p>第一回の出席は十七名だった。定員には満たないが、この種の講座としては多いほうである。自己紹介の際、何を録りたいかを一人ずつ述べてもらった。踏切、給食の配膳、部室の扉、雨。ひとりが「音のしないもの」と答えて、ほかの受講生が笑った。私は笑わなかった。録音技術の歴史において、それは最も正統な回答のひとつだからである。</p>
+<p>次回までの課題は、自宅から学校までの経路上で、最も短い音をひとつ見つけてくること。短さの定義は各自に任せる。定義そのものが提出物の一部である。</p>
+`},
+
+{era:"old", date:"2025-05-24", time:"09:02", title:"第二回　記録の単位について", tags:["講座","方法","残響"], body:`
+<p>第二回。課題は「最も短い音」。提出は十五点。</p>
+<p>短さを競う課題ではない、と最初に断ったのだが、やはり競技になった。最短は〇・〇八秒、机上でシャープペンシルの芯が折れる音である。波形を拡大して見せると、教室が静かになった。〇・〇八秒のなかに、立ち上がりと、破断と、机板の共鳴という三つの層がある。受講生のひとりが「短い音って、拡大すると長いんですね」と言った。その通りである。短さは長さの反対ではなく、注意の粗さの別名にすぎない。</p>
+<p>記録の単位について話した。私たちは音を「秒」で測る習慣があるが、それは記録装置の都合であって、音の都合ではない。ある音が始まったと感じる時刻と、装置が最初の振幅を検出する時刻は一致しない。逆に、装置が沈黙と判定したあとも、私たちはしばらくその音を聴き続けている。</p>
+<p>この後者を、本講座では便宜的に <em>afterlife</em>（残響）と呼ぶことにする。建築音響でいう残響時間とは区別してほしい。私が言っているのは、物理的に鳴り終わった音が、聴き手の側でなお持続している時間のことである。</p>
+<p>測れるものではない。測れないものに名前をつけるのは、研究としては行儀が悪い。しかし高校生を相手にする講座では、行儀よりも輪郭のほうが役に立つ。</p>
+<p>次回課題：残響の長い音をひとつ。</p>
+`},
+
+{era:"old", date:"2025-06-14", time:"21:46", title:"第四回　手の音", tags:["講座","手"], body:`
+<p>第四回。課題を急遽「手の音」に変更した。前回の「残響の長い音」が、予想に反してうまくいかなかったからである。鐘、体育館、トンネル。ほぼ全員が同じ発想に行き着いた。課題の立て方が悪い。大きく響く場所を探せ、という指示に聞こえてしまった。</p>
+<p>手の音であれば、誰にでも固有のものがある。指を鳴らす、ページをめくる、蛇口をひねる、鞄のファスナーを引く。そもそも録音機を手で持っている以上、手の音は常に混入している。本来は除去すべきノイズを、今回は主題にする。</p>
+<p>面白かったのは、ある受講生が、自分の手ではなく祖母の手を録ってきたことである。編み物をしている音。針が互いに触れる音と、毛糸が指の腹をこする音と、それから時折入る短い呼気。本人は「息が入ってしまったので失敗です」と言った。</p>
+<p>私は、あれは失敗ではない、あの録音のなかで唯一取り返しのつかない部分だ、と答えた。針の音は明日も録れる。毛糸の音も録れる。あの呼気だけが、あの日のあの一度きりのものである。</p>
+<p>言いながら、少し言いすぎたと思った。高校生に向ける言葉としては重い。教室が静かになったので、すぐに機材の話に戻した。</p>
+`},
+
+{era:"old", date:"2025-07-05", time:"11:19", title:"提出音源について（受講生各位）", tags:["講座","事務","資料"], body:`
+<p>事務連絡。</p>
+<p>提出音源のファイル名が統一されていない。以下の規則にしたがって改名のうえ、再提出すること。</p>
+<div class="measure">姓のローマ字（大文字三字）＿月日（四桁）＿録音開始時刻（四桁）．wav
+
+  例　ABE_0614_1530.wav</div>
+<p>録音開始時刻は、機材の表示をそのまま書き写すこと。丸めないこと。この講座では、いつ録ったかが、何を録ったかと同じくらい重要である。分単位で構わないが、機材が秒まで出している場合は切り捨てずに申告してほしい。</p>
+<p>提出済みのファイルは配布領域に置いてある。自分の提出が反映されているか各自で確認すること。→ <a href="#/notes/data">提出音源一覧</a></p>
+<p>なお、講座外の録音を提出領域に置くことは差し支えないが、講評の対象にはならない。</p>
+`},
+
+{era:"old", date:"2025-07-27", time:"18:53", title:"第八回　講評", tags:["講座","講評"], body:`
+<p>最終回。全八回、欠席はほとんど出なかった。高校生を相手にこれは珍しいことである。</p>
+<p>以下、提出作品への講評を簡単に。掲載にあたり、氏名はイニシャルに置き換えた。</p>
+<div class="q">
+<p>A.　踏切。遮断機の警報音の、左右のスピーカーのわずかな位相差をよく捉えている。立ち位置を選んだことがわかる。</p>
+<p>I.　給食室。換気扇の定常音のなかから配膳の金属音を拾おうとしている。狙いはよいが、ゲインが高すぎて歪んでいる。</p>
+<p>O.　部室の扉。同じ扉を七回開閉している。反復によって、扉が一度ごとに違う音を出していることがわかる。着眼は本講座で最もよい。</p>
+<p>（中略）</p>
+<p>M.　雨。傘に当たる雨と、地面に当たる雨と、川面に落ちる雨を続けて録っている。移動しながら録ることの難しさがそのまま出ている。</p>
+</div>
+<p>S.　――ここだけ長くなることを許してほしい。</p>
+<p>提出されたのは、無人の音楽室で、誰も触れていない状態のピアノを十一分録ったものである。何も起きない。厳密には、何も起きないということが起き続けている。暖房の停止、窓の外を通る車、蛍光灯の安定器、廊下の遠い足音。そして、おそらく弦の共鳴。ピアノは誰にも弾かれていないのに、部屋のなかで起きたすべての音に、ごくわずかに応答している。</p>
+<p>最初に聴いたときは、失敗作だと思った。二度目に、そうではないと思った。三度目に聴いて、これは残響についての課題への、最も正確な回答だと判断した。鳴っていないものが、鳴ったもののあとをどれだけ保持できるか。彼女はそれを、説明ではなく、十一分の無音で示した。</p>
+<p>技術的な指摘をひとつ。録音開始から一分四十秒あたりで、機材を置き直す音が入っている。次は最初から置いておくこと。</p>
+<figure>
+<img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400'><rect width='600' height='400' fill='none'/></svg>" alt="第八回終了後の集合写真。受講生十七名。掲載は本人および保護者の希望により取り下げた。受講者名簿と出欠の記録は resources/ws2025 に残してある。">
+<figcaption>第八回終了後、実習室にて。写真の掲載は取り下げた。</figcaption>
+</figure>
+<p>講座は今回で終了する。受講生諸君の録音機は返却の必要はない。貸出分については、夏季休業明けに事務室で受け付ける。</p>
+`},
+
+{era:"old", date:"2025-07-31", time:"16:27", title:"夏季休業中の取り扱いについて", tags:["事務"], body:`
+<p>事務連絡。</p>
+<p>配布領域は当分のあいだ残す。提出済みの音源は各自ダウンロードしておくこと。来年度に同種の講座が開講する場合、領域は初期化される可能性がある。</p>
+<p>質問は大学のアドレスへ。ただし夏季休業中は確認が遅れる。</p>
+<p>講座に関連しない個人的な連絡については、対応しかねる。あしからず。</p>
+`},
+
+/* ENTRIES_END */
+];
+
+const NOTES = {};
+/* NOTES_START */
+
+NOTES["about"] = `
+<div class="page">
+<div class="kicker">COLOPHON</div>
+<h2>この記録について</h2>
+<p>個人の覚書である。所属機関とは関係がない。</p>
+<h3>名称</h3>
+<p>二〇一五年から二〇二五年まで、本ページは「Field Notes ／ まちの音を聴く」の名で、授業と公開講座の記録を載せていた。二〇二六年三月、内容が変わったため改題した。旧稿のうち、現在の主題と関係のないものは非表示にしてある。</p>
+<h3>題について</h3>
+<p><em>afterlife</em> は残響の意である。建築音響でいう残響時間（reverberation time）ではない。物理的に鳴り終わった音が、聴き手の側でなお持続している時間のことを指す。私は公開講座でこの語をそう定義して用い、以後もその意味で使っている。</p>
+<p>測れるものではない。測定できないものを主題に据えるのは研究としては行儀が悪いが、これは研究ではない。<em>texture</em> はその質感のことである。質感という語もまた測れない。</p>
+<h3>定点観測</h3>
+<p>二〇二六年三月以降、毎朝、自宅ベランダにおいて十分間の録音を行っている。位置、機材、設定はすべて固定。日付と時刻のみが変数である。記事の多くはその記録と、それに付随する覚書である。</p>
+<p>目的を訊かれることがある。目的はない。変数が日付と時刻しかない記録を長く続けると、変化したものだけが残る。残ったものを見てから考える。それが順序として正しいと思っている。</p>
+<h3>コメント</h3>
+<p>コメント欄は閉鎖した。理由は特にない。</p>
+</div>`;
+
+/* ---- 受講生配布領域（索引なし） ---- */
+NOTES["data__title"] = "提出音源一覧 ／ resources ws2025";
+NOTES["data"] = `
+<div class="page">
+<div class="kicker">RESOURCES ／ WS2025 ／ INDEX OFF</div>
+<h2>提出音源一覧</h2>
+<p class="note">公開講座「まちの音を聴く」受講生配布領域。講座は二〇二五年七月二十七日をもって終了したが、領域は当分のあいだ残す。本ページは講座ページからのみ参照されており、サイト内の索引には含まれていない。</p>
+
+<h3>受講生別</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>ID</th><th>接頭辞</th><th>学年</th><th>提出（講評対象）</th><th>領域内ファイル数</th></tr></thead>
+<tbody>
+<tr><td>W-01</td><td>ABE</td><td>2</td><td>6</td><td>6</td></tr>
+<tr><td>W-02</td><td>IID</td><td>1</td><td>6</td><td>6</td></tr>
+<tr><td>W-03</td><td>OKU</td><td>3</td><td>5</td><td>5</td></tr>
+<tr><td>W-04</td><td>KAS</td><td>2</td><td>6</td><td>6</td></tr>
+<tr><td>W-05</td><td>KUD</td><td>1</td><td>4</td><td>4</td></tr>
+<tr><td>W-06</td><td>SAK</td><td>2</td><td>6</td><td>7</td></tr>
+<tr><td>W-07</td><td>SHI</td><td>3</td><td>6</td><td>6</td></tr>
+<tr><td>W-08</td><td>TAK</td><td>1</td><td>5</td><td>5</td></tr>
+<tr><td>W-09</td><td>KAI</td><td>2</td><td>6</td><td>23</td></tr>
+<tr><td>W-10</td><td>TAN</td><td>2</td><td>6</td><td>6</td></tr>
+<tr><td>W-11</td><td>NAG</td><td>1</td><td>3</td><td>3</td></tr>
+<tr><td>W-12</td><td>NIS</td><td>2</td><td>6</td><td>6</td></tr>
+<tr><td>W-13</td><td>HAY</td><td>3</td><td>6</td><td>6</td></tr>
+<tr><td>W-14</td><td>FUJ</td><td>2</td><td>5</td><td>5</td></tr>
+<tr><td>W-15</td><td>HOR</td><td>1</td><td>6</td><td>6</td></tr>
+<tr><td>W-16</td><td>MAT</td><td>2</td><td>6</td><td>6</td></tr>
+<tr><td>W-17</td><td>MIY</td><td>2</td><td>4</td><td>4</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>更新の新しい順（上位二十件）</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>ファイル名</th><th>録音開始</th><th>長さ</th><th>提出</th><th>参照回数</th></tr></thead>
+<tbody>
+<tr><td>KAI_0816_2351.wav</td><td>2025-08-16 23:51</td><td>17:04</td><td>―</td><td>1,708</td></tr>
+<tr><td>KAI_0814_0402.wav</td><td>2025-08-14 04:02</td><td>06:22</td><td>―</td><td>613</td></tr>
+<tr><td>KAI_0811_2238.wav</td><td>2025-08-11 22:38</td><td>09:50</td><td>―</td><td>402</td></tr>
+<tr><td>KAI_0808_1917.wav</td><td>2025-08-08 19:17</td><td>02:11</td><td>―</td><td>388</td></tr>
+<tr><td>KAI_0805_0531.wav</td><td>2025-08-05 05:31</td><td>11:00</td><td>―</td><td>271</td></tr>
+<tr><td>KAI_0802_1444.wav</td><td>2025-08-02 14:44</td><td>04:37</td><td>―</td><td>190</td></tr>
+<tr><td>KAI_0731_1631.wav</td><td>2025-07-31 16:31</td><td>00:31</td><td>―</td><td>946</td></tr>
+<tr><td>KAI_0729_0210.wav</td><td>2025-07-29 02:10</td><td>22:45</td><td>―</td><td>155</td></tr>
+<tr><td>KAI_0726_1500.wav</td><td>2025-07-26 15:00</td><td>11:00</td><td>○</td><td>88</td></tr>
+<tr><td>MIY_0726_0730.wav</td><td>2025-07-26 07:30</td><td>03:12</td><td>○</td><td>2</td></tr>
+<tr><td>HOR_0725_1812.wav</td><td>2025-07-25 18:12</td><td>01:48</td><td>○</td><td>1</td></tr>
+<tr><td>SAK_0725_1140.wav</td><td>2025-07-25 11:40</td><td>05:03</td><td>○</td><td>1</td></tr>
+<tr><td>ABE_0724_0645.wav</td><td>2025-07-24 06:45</td><td>02:27</td><td>○</td><td>2</td></tr>
+<tr><td>NIS_0724_2015.wav</td><td>2025-07-24 20:15</td><td>04:09</td><td>○</td><td>1</td></tr>
+<tr><td>TAN_0723_1333.wav</td><td>2025-07-23 13:33</td><td>00:52</td><td>○</td><td>1</td></tr>
+<tr><td>KAI_0721_0417.wav</td><td>2025-07-21 04:17</td><td>14:26</td><td>―</td><td>204</td></tr>
+<tr><td>HAY_0720_1600.wav</td><td>2025-07-20 16:00</td><td>03:44</td><td>○</td><td>1</td></tr>
+<tr><td>MAT_0719_0958.wav</td><td>2025-07-19 09:58</td><td>06:15</td><td>○</td><td>2</td></tr>
+<tr><td>KAI_0714_2251.wav</td><td>2025-07-14 22:51</td><td>08:33</td><td>―</td><td>167</td></tr>
+<tr><td>SHI_0713_1122.wav</td><td>2025-07-13 11:22</td><td>02:40</td><td>○</td><td>1</td></tr>
+</tbody>
+</table>
+</div>
+<p class="note">「提出」欄の ― は、講座外の録音として領域内に置かれたもの。<a href="#/e/2025-07-05">提出音源について（受講生各位）</a>に記したとおり、講評の対象ではない。</p>
+<p class="note">参照回数はサーバの生ログに基づく。管理者自身による再生を含むため、受講生間の比較には用いないこと。</p>
+<p class="note">領域の最終アクセス：2026-09-17 04:17</p>
+</div>`;
+
+/* ---- 事業報告（学内用の控え） ---- */
+NOTES["ws2025__title"] = "高大連携公開講座 実施報告（控）";
+NOTES["ws2025"] = `
+<div class="page">
+<div class="kicker">RESOURCES ／ WS2025 ／ REPORT</div>
+<h2>高大連携公開講座「まちの音を聴く」実施報告（控）</h2>
+<p class="note">学内様式にもとづく控え。提出済。本ページは公開を意図していない。</p>
+
+<h3>実施概要</h3>
+<div class="scroll">
+<table>
+<tbody>
+<tr><th>事業名</th><td>高大連携公開講座「まちの音を聴く」</td></tr>
+<tr><th>期間</th><td>2025-04-19 ～ 2025-07-27（隔週土曜、全八回）</td></tr>
+<tr><th>会場</th><td>人文学部 音響実習室</td></tr>
+<tr><th>担当</th><td>准教授 K.（企画・実施・記録）</td></tr>
+<tr><th>受講者数</th><td>17名（1年 5／2年 9／3年 3）</td></tr>
+<tr><th>延べ出席</th><td>129／136</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>出欠</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>ID</th><th>学年</th><th>出席</th><th>提出</th><th>備考</th></tr></thead>
+<tbody>
+<tr><td>W-01</td><td>2</td><td>8</td><td>6</td><td></td></tr>
+<tr><td>W-02</td><td>1</td><td>8</td><td>6</td><td></td></tr>
+<tr><td>W-03</td><td>3</td><td>7</td><td>5</td><td>7月 模試のため欠席</td></tr>
+<tr><td>W-04</td><td>2</td><td>8</td><td>6</td><td></td></tr>
+<tr><td>W-05</td><td>1</td><td>6</td><td>4</td><td></td></tr>
+<tr><td>W-06</td><td>2</td><td>8</td><td>6</td><td></td></tr>
+<tr><td>W-07</td><td>3</td><td>8</td><td>6</td><td></td></tr>
+<tr><td>W-08</td><td>1</td><td>7</td><td>5</td><td></td></tr>
+<tr><td>W-09</td><td>2</td><td>8</td><td>6</td><td>皆勤。機材貸出（本人希望により継続）</td></tr>
+<tr><td>W-10</td><td>2</td><td>8</td><td>6</td><td></td></tr>
+<tr><td>W-11</td><td>1</td><td>5</td><td>3</td><td></td></tr>
+<tr><td>W-12</td><td>2</td><td>8</td><td>6</td><td></td></tr>
+<tr><td>W-13</td><td>3</td><td>8</td><td>6</td><td></td></tr>
+<tr><td>W-14</td><td>2</td><td>7</td><td>5</td><td></td></tr>
+<tr><td>W-15</td><td>1</td><td>8</td><td>6</td><td></td></tr>
+<tr><td>W-16</td><td>2</td><td>8</td><td>6</td><td></td></tr>
+<tr><td>W-17</td><td>2</td><td>6</td><td>4</td><td></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>所見</h3>
+<p>録音という手続きを通して聴取の枠組みを問い直す、という当初の目的はおおむね達成された。高校生の可塑性は予想を上回る。とくに第四回以降、「除去すべきノイズ」と「記録すべき対象」の境界を自分で引き直す者が複数現れた。</p>
+<p>反省点として、講評に要する時間の配分が適切でなかった。最終回においては、一名の作品に対する講評が全体の三分の一以上を占めた。他の受講生に対して公平を欠いたと考える。次年度に実施する場合は、講評を書面に改めるべきである。</p>
+
+<h3>次年度</h3>
+<p>開講しない。担当者の都合による。</p>
+
+<p class="fn" style="margin-top:2.4em;padding-top:14px;border-top:1px solid var(--rule-soft);font-size:12.5px;color:var(--muted)">
+※ 本報告の作成にあたり参照した録音（第八回・講評）の文字起こしにおいて、話者（筆者）の発話に複数の誤りが認められた。以後の自己録音における同種の誤りとあわせ、<a href="#/notes/errata">別表</a>にまとめた。（2026-08-24 追記）
+</p>
+<p class="note">最終更新：2026-08-24 03:17</p>
+</div>`;
+
+/* ---- 発話誤りの自己記録 ---- */
+NOTES["errata__title"] = "発話誤りの自己記録（別表）";
+NOTES["errata"] = `
+<div class="page">
+<div class="kicker">RESOURCES ／ ERRATA</div>
+<h2>発話誤りの自己記録</h2>
+<p class="note">自分の音声記録を文字起こしする過程で見つかった、自分自身の発話の誤りを記録する。音声学の授業で学生にやらせている課題を、自分に課している。恥ずかしい作業だが、他人の誤りだけを集めるのは公平でない。</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>#</th><th>日付</th><th>音源／位置</th><th>誤形</th><th>正形</th><th>類型</th><th>所見</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>2025-07-27</td><td>ws2025_08 41:12</td><td>すずおん</td><td>せいおん（静穏）</td><td>摩擦音の交替＋母音同化</td><td>直前に該当音を含む語なし。長時間の発話による疲労と判断。</td></tr>
+<tr><td>2</td><td>2026-03-19</td><td>fix_0319 06:40</td><td>すずそう</td><td>すいそう（水槽）</td><td>母音の後舌化</td><td>/i/ の脱落。話速が上がった箇所。</td></tr>
+<tr><td>3</td><td>2026-04-21</td><td>fix_0421 02:08</td><td>すずめん</td><td>すいめん（水面）</td><td>母音の後舌化</td><td>2と同型。同一環境下での再発。</td></tr>
+<tr><td>4</td><td>2026-05-13</td><td>fix_0513 08:17</td><td>すずおと</td><td>みずおと（水音）</td><td>鼻音の摩擦音化</td><td>語頭子音の交替。類例に乏しい。</td></tr>
+<tr><td>5</td><td>2026-06-02</td><td>fix_0602 01:31</td><td>すずしい</td><td>さびしい（寂しい）</td><td>語彙的置換</td><td>気温の記述の直後であり、文脈からの干渉と考えられる。誤りというより言い換えに近い。</td></tr>
+<tr><td>6</td><td>2026-06-28</td><td>fix_0628 04:55</td><td>すずむし</td><td>むし（虫）</td><td>語頭の付加</td><td>当該季節に鈴虫は鳴かない。先取りと思われる。</td></tr>
+<tr><td>7</td><td>2026-07-15</td><td>fix_0715 09:02</td><td>すずけさ</td><td>しずけさ（静けさ）</td><td>摩擦音の交替</td><td>1と同方向。</td></tr>
+<tr><td>8</td><td>2026-08-05</td><td>fix_0805 00:44</td><td>すずんで</td><td>すんで（済んで）</td><td>音節の挿入</td><td>暑熱による。</td></tr>
+<tr><td>9</td><td>2026-09-08</td><td>fix_0908 07:13</td><td>すずの</td><td>その</td><td>―</td><td>該当なし。</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>集計</h3>
+<p class="note">摩擦音の交替 3件／母音の交替 2件／語頭の交替・付加 2件／語彙的置換 1件／類型不明 1件。計九件。いずれも調音上の同化、あるいは直前の語彙からの干渉によって説明できる範囲にある。特定の語への偏りは認められない。</p>
+<p class="note">引き続き記録する。</p>
+<p class="note">最終更新：2026-09-08 05:17</p>
+</div>`;
+
+/* ---- 2025年8月 ---- */
+NOTES["draft-2025-08"] = `
+<div class="draft">
+<span class="lbl">DRAFT ／ 未公開</span>
+<p class="line">きこえない</p>
+<div class="meta">作成 2025-08-17 03:17　／　最終更新 2025-08-17 03:17　／　タイトルなし　／　公開されていません</div>
+</div>
+<p class="note">下書きは公開ページには表示されません。この画面は管理者にのみ表示されます。</p>`;
+
+/* NOTES_END */
+
+/* ============================================================
+   描画
+   ============================================================ */
+const WD = ["日","月","火","水","木","金","土"];
+function jdate(d){
+  const [y,m,day] = d.split("-").map(Number);
+  const w = WD[new Date(Date.UTC(y,m-1,day)).getUTCDay()];
+  return y+"年"+m+"月"+day+"日（"+w+"）";
+}
+function ym(d){ return d.slice(0,7); }
+function jym(s){ const [y,m]=s.split("-"); return y+"年"+Number(m)+"月"; }
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function strip(h){ return h.replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim(); }
+
+const byDateDesc = (a,b)=> a.date<b.date?1:a.date>b.date?-1:0;
+const sorted = ()=> ENTRIES.slice().sort(byDateDesc);
+
+function entryHTML(e,opts){
+  opts = opts||{};
+  const tags = (e.tags||[]).map(t=>'<a href="#/tag/'+encodeURIComponent(t)+'">'+esc(t)+'</a>').join("");
+  return '<article class="entry" id="e-'+e.date+'">'
+    + '<div class="stamp"><span>'+jdate(e.date)+'</span><span>'+e.time+'</span><span><a href="#/e/'+e.date+'" style="color:inherit">#'+e.date.replace(/-/g,"")+'</a></span></div>'
+    + '<h2><a href="#/e/'+e.date+'">'+esc(e.title)+'</a></h2>'
+    + '<div class="body">'+e.body+'</div>'
+    + (e.edited?'<div class="editnote">この記事は '+e.edited+' に編集されました。</div>':'')
+    + (tags?'<div class="tags">'+tags+'</div>':'')
+    + '</article>';
+}
+
+function viewHome(){
+  const list = sorted();
+  let html = '<div class="viewnote"><span>全 '+list.length+' 件</span><span>新しい順</span><span>下へ行くほど過去になります</span></div>';
+  let prev = null;
+  list.forEach(e=>{
+    if(prev && prev.era==="main" && e.era==="old"){
+      html += '<div class="gapmark">この間、二一七日</div>';
+    }
+    html += entryHTML(e);
+    prev = e;
+  });
+  return html;
+}
+
+function viewOne(date){
+  const e = ENTRIES.find(x=>x.date===date);
+  if(!e) return '<div class="page"><h2>見つかりません</h2><p>その日付の記事はありません。</p></div>';
+  const list = sorted();
+  const i = list.indexOf(e);
+  const newer = list[i-1], older = list[i+1];
+  return '<div class="viewnote"><span><a href="#/" style="color:inherit">記録へ戻る</a></span></div>'
+    + entryHTML(e)
+    + '<div class="monthnav">'
+    + (older?'<a href="#/e/'+older.date+'">← '+older.date+'</a>':'<span></span>')
+    + (newer?'<a href="#/e/'+newer.date+'">'+newer.date+' →</a>':'<span></span>')
+    + '</div>';
+}
+
+function shiftMonth(s,d){
+  let [y,m] = s.split("-").map(Number);
+  m += d;
+  if(m<1){m=12;y--;} if(m>12){m=1;y++;}
+  return y+"-"+String(m).padStart(2,"0");
+}
+
+function viewArchiveIndex(){
+  const months = {};
+  ENTRIES.forEach(e=>{ months[ym(e.date)] = (months[ym(e.date)]||0)+1; });
+  const keys = Object.keys(months).sort().reverse();
+  let html = '<div class="page"><div class="kicker">ARCHIVE</div><h2>アーカイブ</h2>'
+    + '<p class="note">公開済みの記事を月ごとにまとめています。記事のない月は表示されません。</p>'
+    + '<div class="scroll"><table><thead><tr><th>月</th><th>件数</th><th>公開時刻（分）</th></tr></thead><tbody>';
+  keys.forEach(k=>{
+    const mins = ENTRIES.filter(e=>ym(e.date)===k).sort(byDateDesc).map(e=>e.time.split(":")[1]).join(" ");
+    html += '<tr><td><a href="#/archive/'+k+'">'+jym(k)+'</a></td><td>'+months[k]+'</td><td>'+mins+'</td></tr>';
+  });
+  html += '</tbody></table></div></div>';
+  return html;
+}
+
+function viewMonth(key){
+  const list = ENTRIES.filter(e=>ym(e.date)===key).sort(byDateDesc);
+  let html = '<div class="viewnote"><span><a href="#/archive" style="color:inherit">アーカイブ</a></span><span>'+jym(key)+'</span></div>';
+  if(list.length===0){
+    html += '<div class="page"><h2>'+jym(key)+'</h2><p class="note">この月に公開された記事はありません。</p>';
+    if(NOTES["draft-"+key]) html += NOTES["draft-"+key];
+    html += '</div>';
+  } else {
+    list.forEach(e=>{ html += entryHTML(e); });
+  }
+  html += '<div class="monthnav">'
+    + '<a href="#/archive/'+shiftMonth(key,-1)+'">← '+jym(shiftMonth(key,-1))+'</a>'
+    + '<a href="#/archive/'+shiftMonth(key,1)+'">'+jym(shiftMonth(key,1))+' →</a>'
+    + '</div>';
+  return html;
+}
+
+function viewTag(t){
+  const list = ENTRIES.filter(e=>(e.tags||[]).includes(t)).sort(byDateDesc);
+  let html = '<div class="viewnote"><span>タグ</span><span>'+esc(t)+'</span><span>'+list.length+' 件</span></div>';
+  if(!list.length) html += '<div class="page"><p class="note">該当する記事はありません。</p></div>';
+  list.forEach(e=>{ html += entryHTML(e); });
+  return html;
+}
+
+function viewSearch(q){
+  const needle = q.trim();
+  let html = '<div class="page"><div class="kicker">SEARCH</div><h2>「'+esc(needle)+'」</h2>';
+  if(!needle){ return html + '<p class="note">語を入力してください。</p></div>'; }
+  const hits = [];
+  ENTRIES.forEach(e=>{
+    const text = e.title + " " + strip(e.body);
+    const i = text.indexOf(needle);
+    if(i>=0){
+      const s = Math.max(0,i-30), t = text.slice(s,i+needle.length+50);
+      hits.push({href:"#/e/"+e.date, stamp:jdate(e.date)+"　"+e.time, title:e.title,
+        snip: esc(t).replace(esc(needle),"<mark>"+esc(needle)+"</mark>")});
+    }
+  });
+  Object.keys(NOTES).forEach(k=>{
+    if(k.indexOf("draft-")===0 || /__title$/.test(k) || k==="about") return;
+    const text = strip(NOTES[k]);
+    const i = text.indexOf(needle);
+    if(i>=0){
+      const s = Math.max(0,i-30), t = text.slice(s,i+needle.length+50);
+      hits.push({href:"#/notes/"+k, stamp:"resources／索引外", title:NOTES[k+"__title"]||k,
+        snip: esc(t).replace(esc(needle),"<mark>"+esc(needle)+"</mark>")});
+    }
+  });
+  html += '<p class="note">'+hits.length+' 件。</p></div>';
+  hits.forEach(h=>{
+    html += '<div class="hit"><div class="stamp">'+h.stamp+'</div><h4><a href="'+h.href+'">'+esc(h.title)+'</a></h4><p>…'+h.snip+'…</p></div>';
+  });
+  return html;
+}
+
+function viewNote(k){
+  if(!NOTES[k]) return '<div class="page"><h2>404</h2><p class="note">このページはありません。</p></div>';
+  return NOTES[k];
+}
+
+function rail(){
+  const months = {};
+  ENTRIES.forEach(e=>{ months[ym(e.date)] = (months[ym(e.date)]||0)+1; });
+  const keys = Object.keys(months).sort().reverse();
+  const tags = {};
+  ENTRIES.forEach(e=>(e.tags||[]).forEach(t=>{ tags[t]=(tags[t]||0)+1; }));
+  const tk = Object.keys(tags).sort((a,b)=>tags[b]-tags[a]);
+  return '<section><h3>検索</h3>'
+    + '<form class="search" id="sf"><input id="sq" type="search" placeholder="語を入力" aria-label="サイト内検索"><button type="submit">GO</button></form></section>'
+    + '<section><h3>月別</h3><ul>'
+    + keys.map(k=>'<li><a href="#/archive/'+k+'">'+jym(k)+'</a> <span class="n">'+months[k]+'</span></li>').join("")
+    + '</ul></section>'
+    + '<section><h3>分類</h3><div class="taglist">'
+    + tk.map(t=>'<a href="#/tag/'+encodeURIComponent(t)+'">'+esc(t)+'<span class="n">'+tags[t]+'</span></a>').join("")
+    + '</div></section>';
+}
+
+function route(){
+  const h = location.hash.replace(/^#/,"") || "/";
+  const p = h.split("/").filter(Boolean);
+  let html;
+  if(p.length===0) html = viewHome();
+  else if(p[0]==="e") html = viewOne(p[1]);
+  else if(p[0]==="archive") html = p[1]?viewMonth(p[1]):viewArchiveIndex();
+  else if(p[0]==="tag") html = viewTag(decodeURIComponent(p[1]||""));
+  else if(p[0]==="search") html = viewSearch(decodeURIComponent(p.slice(1).join("/")));
+  else if(p[0]==="notes") html = viewNote(p.slice(1).join("/"));
+  else if(p[0]==="about") html = viewNote("about");
+  else html = '<div class="page"><h2>404</h2><p class="note">このページはありません。</p></div>';
+  document.getElementById("main").innerHTML = html;
+  document.getElementById("rail").innerHTML = rail();
+  const f = document.getElementById("sf");
+  if(f) f.addEventListener("submit",ev=>{
+    ev.preventDefault();
+    const v = document.getElementById("sq").value;
+    if(v.trim()) location.hash = "#/search/"+encodeURIComponent(v.trim());
+  });
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",route);
+route();
+</script>
+
 </body>
 </html>
