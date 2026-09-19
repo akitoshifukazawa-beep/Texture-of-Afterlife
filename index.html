@@ -106,12 +106,12 @@
     <script>
         let count = 1;
 
-        // 特定作品に依存しない、汎用的な過剰解釈（解読）テンプレート
+        // 任意の文章が入っても文法が崩れない解読テンプレート
         const interpretTemplates = [
-            (title, snippet) => `一見すると「${title}」に関する無害な記述に見える。しかし、${snippet} という一節において決定的な文脈の切断が行われている。表面上の事実に意識を向けさせ、記録の根幹から目を逸らさせるための過剰な記述に過ぎない。`,
-            (title, snippet) => `拾い上げられた「${title}」というテキストの裏には、${snippet} という形で別の意図が潜んでいる。この記述が提示されたこと自体、元のアレゴリーが改変された証拠である。`,
-            (title, snippet) => `「${title}」という言葉（― ${snippet}）がこのタイミングで抽出されたのは偶然ではない。検索およびアーカイブのアルゴリズム自体が、特定の記録を隠蔽するように操作されている。`,
-            (title, snippet) => `『${title}』をめぐる言説の中で語られる ${snippet} という部分は、先行する記述を意図的に上書きした痕跡である。客観的データという形式を借りた言論の再構築に他ならない。`
+            (title, snippet) => `「${title}」の記録において、『${snippet}』と言及されている点に注目されたい。一見すると中立的な事実の記述に見えるが、この特定の文脈のみを選択して提示すること自体が、背後にある別の歴史を覆い隠すための操作である。`,
+            (title, snippet) => `テキスト内では『${snippet}』と主張されている。しかし、このような客観性を装った記述を置くことで、本来語られるべきであった別の事象から読者の意識を逸らそうとする意図が示されている。`,
+            (title, snippet) => `「${title}」に関する『${snippet}』という記述は、単なる情報の記録ではない。先行する記録を意図的に置き換え、読者の認識を特定の枠組みに固定化させるための構造的な配置である。`,
+            (title, snippet) => `『${snippet}』という形で事実が断定されているが、この言説が構成されたプロセスそのものに疑いを向ける必要がある。語られた言葉の背後で、何が切り捨てられ沈黙させられたかを見極めなければならない。`
         ];
 
         function getRandom(arr) {
@@ -124,12 +124,15 @@
             btn.innerText = "テキスト取得中...";
 
             try {
-                // Wikipedia API等からランダムな概要を取得
                 const response = await fetch('https://ja.wikipedia.org/api/rest_v1/page/random/summary');
                 const data = await response.json();
 
                 const title = data.title;
-                const extract = data.extract ? data.extract.substring(0, 90) + "…" : "（テキストの抽出に失敗）";
+                // 引用文の末尾を適切に処理
+                let extract = data.extract ? data.extract.substring(0, 80).trim() : "";
+                if (extract && !extract.endsWith('。')) {
+                    extract += "…";
+                }
 
                 const templateFn = getRandom(interpretTemplates);
                 const resultText = templateFn(title, extract);
