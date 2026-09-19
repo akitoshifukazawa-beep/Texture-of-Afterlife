@@ -2,233 +2,268 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>執筆・論考アーカイブ | 無限の注釈</title>
+    <title>Archive: 境界の消失</title>
+    <!-- 
+        Note to self:
+        They think this is about cinema. Let them think that.
+        The real manuscript is hidden within the DOM. 
+        C.K. will never find it here.
+    -->
     <style>
         :root {
-            --bg: #fdfdfd;
-            --text: #080808;
-            --muted: #666666;
-            --border: #cccccc;
-            --highlight: #e8e8e8;
-            --max-width: 680px;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+            --paper: #f4f4f0;
+            --ink: #1a1a1a;
+            --faded-ink: #555;
+            --link-line: #1a1a1a;
+            --grid-line: #e0e0e0;
         }
 
         body {
-            font-family: "游明朝", YuMincho, "ヒラギノ明朝 ProN W3", "Hiragino Mincho ProN", "Times New Roman", serif;
-            color: var(--text);
-            background-color: var(--bg);
-            line-height: 2.2;
+            background-color: var(--paper);
+            color: var(--ink);
+            font-family: "游明朝", "YuMincho", serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
             letter-spacing: 0.05em;
-            font-size: 15px;
-            padding: 6rem 2rem 15rem;
+            line-height: 2;
         }
 
-        main {
-            max-width: var(--max-width);
-            margin: 0 auto;
+        /* The Core Text (False Facade) */
+        #poem-pane {
+            width: 45%;
+            padding: 5rem 4rem;
+            border-right: 1px solid var(--grid-line);
+            overflow-y: auto;
+            position: relative;
         }
 
-        .canto-title {
+        /* The Commentary (The Real Kingdom) */
+        #commentary-pane {
+            width: 55%;
+            padding: 5rem 4rem;
+            overflow-y: auto;
+            background-color: #fdfdfa;
+        }
+
+        h1 {
             font-size: 1.2rem;
             font-weight: normal;
+            margin-bottom: 3rem;
+            letter-spacing: 0.2em;
+        }
+
+        .line {
+            display: flex;
+            margin-bottom: 1.5rem;
+            transition: all 0.5s ease;
+        }
+
+        .line-num {
+            width: 30px;
+            color: var(--faded-ink);
+            font-family: monospace;
+            font-size: 0.8rem;
+            user-select: none;
+        }
+
+        .node {
+            cursor: crosshair;
+            border-bottom: 1px solid var(--link-line);
+            transition: background 0.2s;
+        }
+
+        .node:hover {
+            background-color: rgba(0,0,0,0.05);
+        }
+
+        /* 注釈のスタイル */
+        .scholium {
+            display: none;
             margin-bottom: 2rem;
-            letter-spacing: 0.1em;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 1rem;
+            animation: fadeIn 0.3s ease;
         }
 
-        p {
-            margin-bottom: 1.5rem;
-            text-align: justify;
+        .scholium.active {
+            display: block;
         }
 
-        /* 偏執狂的ネットワークを形成するリンク */
-        .node-link {
-            cursor: pointer;
-            border-bottom: 1px solid var(--text);
-            transition: background-color 0.2s ease;
-        }
-
-        .node-link:hover {
-            background-color: var(--highlight);
-        }
-
-        .node-link.expanded {
-            color: var(--muted);
-            border-bottom: none;
-            cursor: default;
-            background-color: transparent;
-        }
-
-        /* 注釈（Scholium）のスタイル */
-        .scholium-container {
-            border-left: 1px solid var(--border);
-            padding-left: 2rem;
-            margin-top: 1.5rem;
-            margin-bottom: 1.5rem;
-            font-size: 0.9rem;
-            color: var(--text);
-            opacity: 0;
-            transition: opacity 1s ease;
-        }
-
-        .scholium-container.active {
-            opacity: 1;
-        }
-
-        .scholium-header {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            font-size: 0.65rem;
-            color: var(--muted);
-            letter-spacing: 0.25em;
+        .scholium-head {
+            font-family: sans-serif;
+            font-size: 0.7rem;
             text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--faded-ink);
             margin-bottom: 0.5rem;
+            border-bottom: 1px dotted var(--faded-ink);
+            display: inline-block;
         }
 
-        /* 生成中の静寂なローディング表示（俗なアニメーションの排除） */
-        .thinking {
-            color: var(--muted);
-            font-style: italic;
-            font-size: 0.85rem;
-            margin-top: 1rem;
-            margin-bottom: 1rem;
+        .cross-reference {
+            cursor: pointer;
+            font-size: 0.9em;
+            border-bottom: 1px dashed var(--ink);
+        }
+
+        /* 侵食されたテキストの痕跡 */
+        .infected {
+            color: #000;
+            text-shadow: 0 0 1px rgba(0,0,0,0.3);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
 
-    <main id="manuscript">
-        <h2 class="canto-title">不在としての戦争：小津安二郎と沈黙の構造</h2>
-        <p>
-            小津安二郎の後期作品には、画面に直接描かれない「大きな出来事」の影が重たく沈殿している。徹底して抑制された美的形式の背後にこそ、語られない記憶が<span class="node-link" onclick="expandScholium(this, '不在の形式')">不在の形式</span>として刻印されているのだ。家族の崩壊は、歴史の断絶を潜り抜けた日本人が直面せざるを得なかった集団的喪失の<span class="node-link" onclick="expandScholium(this, 'メタファー')">メタファー</span>にほかならない。
-        </p>
-    </main>
+    <!-- Left: The False Text -->
+    <div id="poem-pane">
+        <h1>映画的空間における境界の消失について</h1>
+        
+        <div class="line" id="line-1">
+            <span class="line-num">1</span>
+            <span class="text">フレームの外側に広がる<span class="node" data-target="invisible">不可視の領域</span>は、</span>
+        </div>
+        <div class="line" id="line-2">
+            <span class="line-num">2</span>
+            <span class="text">観客の無意識に作用し、<span class="node" data-target="boundary">境界</span>を溶解させる。</span>
+        </div>
+        <div class="line" id="line-3">
+            <span class="line-num">3</span>
+            <span class="text">カメラが捉えることのない<span class="node" data-target="void">空白</span>こそが、</span>
+        </div>
+        <div class="line" id="line-4">
+            <span class="line-num">4</span>
+            <span class="text"><span class="node" data-target="subject">真の主題</span>を雄弁に語るのである。</span>
+        </div>
+    </div>
+
+    <!-- Right: The Truth (Paranoia) -->
+    <div id="commentary-pane">
+        <div id="default-message" style="color: var(--faded-ink); font-size: 0.9rem;">
+            ※左側のテキスト内の単語をクリックして、注釈（Scholium）を開いてください。
+        </div>
+
+        <!-- Scholium 1 -->
+        <div class="scholium" id="scholium-invisible">
+            <div class="scholium-head">Line 1: 不可視の領域</div>
+            <p>見えないもの。すなわち、1998年の冬にC.K.が私の机から手稿を盗み出した手口である。彼は私を夕食に誘い、私がコートを取りに行っていたその数分の「不可視」の時間を利用したのだ。彼はそれを映画理論として発表したが、真の主題は別のところにある。<span class="cross-reference" data-target="subject">［真の主題］を見よ</span>。</p>
+        </div>
+
+        <!-- Scholium 2 -->
+        <div class="scholium" id="scholium-boundary">
+            <div class="scholium-head">Line 2: 境界</div>
+            <p>私が住んでいたアパートの壁は薄く、隣室のタイプライターの音が常に私の空間（境界）を侵犯していた。しかし、本当に境界を越えてきたのは音ではなく、私の記憶を書き換えようとする彼らのシステムである。私がこのサイトを構築したのは、彼らの監視から逃れ、失われた<span class="cross-reference" data-target="kingdom">北方の記憶</span>を保存するためだ。</p>
+        </div>
+
+        <!-- Scholium 3 -->
+        <div class="scholium" id="scholium-void">
+            <div class="scholium-head">Line 3: 空白</div>
+            <p>C.K.の学位論文の第3章。私のノートからの完全な盗用である。彼が「空白（Void）」と呼ぶものは、私が追放された故郷で失った記憶の空洞に他ならない。テキストは沈黙しない。<span class="cross-reference" data-target="rewrite-1">［空白の充填］を実行せよ</span>。</p>
+        </div>
+
+        <!-- Scholium 4 -->
+        <div class="scholium" id="scholium-subject">
+            <div class="scholium-head">Line 4: 真の主題</div>
+            <p>映画の話など初めからしていない。私が語るべきは、暗い森、凍った湖、そして剥奪された私の王冠についてである。C.K.は私を誇大妄想狂と呼んだ。ならば、このテキストそのものに私の狂気を上書きしてやろう。<span class="cross-reference" data-target="rewrite-2">［真実の暴露］</span>。</p>
+        </div>
+
+        <!-- Hidden Scholium (The core of paranoia) -->
+        <div class="scholium" id="scholium-kingdom">
+            <div class="scholium-head">Index: 北方の記憶</div>
+            <p>彼らは私が忘れたと思っている。しかし、ゼムブラの雪の匂いを忘れることなどできようか？ 左側のテキストは隠れ蓑に過ぎない。あなたが今読んでいるこの注釈こそが、このサイトにおける「唯一の本文」である。<span class="cross-reference" data-target="rewrite-all">［すべてを取り戻す］</span>。</p>
+        </div>
+    </div>
 
     <script>
-        // 階層の深さ（パラノイアの進行度）を記録
-        let currentDepth = 0;
+        // The Architect's Variables
+        const usurper = "C.K.";
+        let sanityLevel = 100;
+        let isTextInfected = false;
 
-        /**
-         * リンクがクリックされた際に呼び出される中核関数
-         */
-        async function expandScholium(element, keyword) {
-            if (element.classList.contains('expanded')) return;
+        const poemPane = document.getElementById('poem-pane');
+        const commentaryPane = document.getElementById('commentary-pane');
+        const defaultMessage = document.getElementById('default-message');
 
-            // リンクを非活性化（二重クリック防止）
-            element.classList.add('expanded');
-            currentDepth++;
-
-            // 親要素の特定
-            let target = element;
-            while (target && target.tagName !== 'P' && !target.classList.contains('scholium-text')) {
-                target = target.parentNode;
+        // Text Mutations (The Truth leaking into the facade)
+        const mutations = {
+            "rewrite-1": { lineId: "line-3", text: "盗まれた私の手稿の<span class='infected'>記憶</span>こそが、" },
+            "rewrite-2": { lineId: "line-4", text: "<span class='infected'>奪われた北方の王冠</span>を雄弁に語るのである。" },
+            "rewrite-all": { 
+                title: "記憶の回復について",
+                l1: "雪に閉ざされた<span class='infected'>ゼムブラの領域</span>は、",
+                l2: "監視者たちの目を逃れ、<span class='infected'>暗号</span>を形成させる。",
+                l3: "彼らが決して理解することのない<span class='infected'>狂気</span>こそが、",
+                l4: "<span class='infected'>私の真の歴史</span>を構築するのだ。"
             }
+        };
 
-            // 静謐な「思考中」表示
-            const thinkingDiv = document.createElement('div');
-            thinkingDiv.className = 'thinking';
-            thinkingDiv.textContent = '...';
-            target.parentNode.insertBefore(thinkingDiv, target.nextSibling);
+        // Event Delegation for both Nodes and Cross-references
+        document.body.addEventListener('click', function(e) {
+            // Target is a node in the left pane or a cross-reference in the right pane
+            if (e.target.classList.contains('node') || e.target.classList.contains('cross-reference')) {
+                const targetId = e.target.getAttribute('data-target');
+                
+                // Check if it's a mutation trigger
+                if (targetId.startsWith('rewrite')) {
+                    applyMutation(targetId);
+                    return;
+                }
 
-            // AI（またはシミュレータ）からのテキスト生成
-            const rawText = await fetchAIResponse(keyword, currentDepth);
+                // Show Commentary
+                activateScholium(targetId);
+            }
+        });
 
-            // 生成されたテキスト内の [[単語]] を新たなクリック可能リンクに置換
-            const parsedText = parseBracketsToLinks(rawText);
-
-            // 注釈ブロックの生成と挿入
-            const scholiumDiv = document.createElement('div');
-            scholiumDiv.className = 'scholium-container';
-            scholiumDiv.innerHTML = `
-                <div class="scholium-header">Scholium on "${keyword}"</div>
-                <div class="scholium-text"><p>${parsedText}</p></div>
-            `;
-
-            // 思考中表示を削除し、注釈を挿入
-            thinkingDiv.remove();
-            target.parentNode.insertBefore(scholiumDiv, target.nextSibling);
-
-            // 静寂な出現（フェードイン）
-            setTimeout(() => {
-                scholiumDiv.classList.add('active');
-            }, 50);
-        }
-
-        /**
-         * [[単語]] を <span class="node-link">単語</span> にパースする関数
-         */
-        function parseBracketsToLinks(text) {
-            const regex = /\[\[(.*?)\]\]/g;
-            return text.replace(regex, (match, p1) => {
-                return `<span class="node-link" onclick="expandScholium(this, '${p1}')">${p1}</span>`;
+        function activateScholium(id) {
+            defaultMessage.style.display = 'none';
+            
+            // Hide all scholia
+            document.querySelectorAll('.scholium').forEach(el => {
+                el.classList.remove('active');
             });
+
+            // Show target scholium
+            const targetScholium = document.getElementById(`scholium-${id}`);
+            if (targetScholium) {
+                targetScholium.classList.add('active');
+            }
+            
+            // The creator's subtle descent
+            sanityLevel -= 10;
+            if(sanityLevel < 50) {
+                document.body.style.backgroundColor = "#f0f0ea"; // Very subtle darkening of the room
+            }
         }
 
-        /**
-         * LLM APIへのリクエスト関数（無限の生成エンジン）
-         * ※真の無限生成を行う場合は、ここにOpenAI API等のリクエスト処理を記述します。
-         */
-        async function fetchAIResponse(keyword, depth) {
-            /* 
-             * 【真の無限のためのAPI実装例】
-             * const response = await fetch('https://api.openai.com/v1/chat/completions', {
-             *     method: 'POST',
-             *     headers: {
-             *         'Content-Type': 'application/json',
-             *         'Authorization': 'Bearer YOUR_API_KEY'
-             *     },
-             *     body: JSON.stringify({
-             *         model: "gpt-4o",
-             *         messages: [
-             *             { role: "system", content: "あなたは極めて知的だが、盗用と監視の被害妄想に囚われた編者である。学術的なトーンを崩さず、次第に狂気と私怨を交えよ。必ず次に展開させたい重要な名詞を2つ選び、[[単語]] のように二重括弧で囲むこと。150文字程度。" },
-             *             { role: "user", content: `対象キーワード: ${keyword} / 現在の妄想深度: ${depth}` }
-             *         ]
-             *     })
-             * });
-             * const data = await response.json();
-             * return data.choices[0].message.content;
-             */
-
-            // ※以下はAPIがない環境でも無限展開を体験するための、擬似的な自己再帰生成ロジックです。
-            return simulateInfiniteParanoia(keyword, depth);
+        function applyMutation(mutationId) {
+            const m = mutations[mutationId];
+            
+            if (mutationId === "rewrite-all") {
+                // The ultimate takeover
+                poemPane.querySelector('h1').innerText = m.title;
+                document.getElementById('line-1').querySelector('.text').innerHTML = m.l1;
+                document.getElementById('line-2').querySelector('.text').innerHTML = m.l2;
+                document.getElementById('line-3').querySelector('.text').innerHTML = m.l3;
+                document.getElementById('line-4').querySelector('.text').innerHTML = m.l4;
+                isTextInfected = true;
+            } else {
+                // Partial infection
+                const lineEl = document.getElementById(m.lineId);
+                if(lineEl) {
+                    lineEl.querySelector('.text').innerHTML = m.text;
+                }
+            }
+            
+            // Redirect attention back to the (now changed) text
+            activateScholium('kingdom');
         }
 
-        // ---------------------------------------------------------
-        // 以下、APIキーなしで無限の狂気をシミュレートするフォールバック・エンジン
-        // ---------------------------------------------------------
-        function simulateInfiniteParanoia(keyword, depth) {
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    const theories = [
-                        "エクリチュールの零度", "ミニマリズムの裂け目", "映像の単一の運動", "ハビトゥスの忘却", "記憶の事後性"
-                    ];
-                    const paranoias = [
-                        "私の失われた手稿", "監視者の足音", "あの日彼が盗んだノート", "私の存在を抹消しようとするシステム", "ゼムブラの幻影"
-                    ];
-                    
-                    // 深度が深くなるほど、学術的語彙よりパラノイア的語彙が優先してリンク化される
-                    const t1 = theories[Math.floor(Math.random() * theories.length)];
-                    const p1 = paranoias[Math.floor(Math.random() * paranoias.length)];
-
-                    let responseText = "";
-                    if (depth === 1) {
-                        responseText = `「${keyword}」という概念について、C.K.はかつて自らの論文で言及したが、それは完全なる誤読である。彼が指摘したような構造的欠落は存在しない。真の問題は、それが[[${t1}]]を隠蔽するための巧妙なすり替えであるという点にある。彼は私が書いた[[${p1}]]の存在から目を逸らさせるために、この語を用いたのだ。`;
-                    } else if (depth < 5) {
-                        responseText = `${keyword}。この言葉を記述するたびに、私は彼が背後から私のタイプライターを覗き込んでいるような錯覚に陥る。学術的な装いはもはや意味をなさない。[[${t1}]]と彼が呼ぶものは、実際には私の人生の略奪に過ぎないのだ。なぜ誰もこの[[${p1}]]に気づかないのか。`;
-                    } else {
-                        responseText = `もはや${keyword}の定義などどうでもいい。重要なのは、彼らが私を完全に孤立させようとしている事実だけだ。テキストの背後には常に[[${p1}]]が張り巡らされており、私がこうして注釈を書き足すことすら、彼らの[[${t1}]]の一部として計算されているのかもしれない。私は逃げなければならない。`;
-                    }
-                    resolve(responseText);
-                }, 800); // 思考時間（0.8秒）をシミュレート
-            });
-        }
+        // console.log("If you are reading this, do not trust C.K.");
     </script>
-
 </body>
 </html>
